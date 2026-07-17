@@ -6,28 +6,28 @@ todos:
     content: "Phase 0: репозиторий, monorepo-скелет, tooling, CI, AGENTS.md, rules, Vercel"
     status: pending
   - id: phase-1-parser
-    content: "Phase 1: парсер Telegram export (1 экспорт = 1 запись) + Web Worker + fixtures + unit-тесты"
+    content: "Phase 1: парсер Telegram export (1 экспорт = 1 Record) + Web Worker + fixtures + unit-тесты"
     status: pending
   - id: phase-2-engine
-    content: "Phase 2: детерминированный Canvas bar-race движок (render(t)) + визуальные тесты"
+    content: "Phase 2: детерминированный Canvas bar-race движок render(ctx, project, tSec) + визуальные тесты"
     status: pending
   - id: phase-3-editor-shell
     content: "Phase 3: оболочка редактора — бесконечная плоскость, панели, топ-бар (дизайн из Stitch)"
     status: pending
   - id: phase-4-total-data
-    content: "Phase 4: панели Total и Data, live-связка с движком через Zustand"
+    content: "Phase 4: панели Total (Settings) и Data (Record[]), live-связка с движком через Zustand"
     status: pending
   - id: phase-5-design-panels
-    content: "Phase 5: панель Design — фон, карточка чата, таймер (глубокая кастомизация)"
+    content: "Phase 5: панель Design — Theme.background / Theme.card / Theme.timer"
     status: pending
   - id: phase-6-player-export
-    content: "Phase 6: плеер предпросмотра + экспорт MP4 (WebCodecs, fallback MediaRecorder)"
+    content: "Phase 6: плеер предпросмотра + Download a video (WebCodecs, fallback MediaRecorder)"
     status: pending
   - id: phase-7-backend
-    content: "Phase 7: Hono API — auth (email+password), CRUD проектов, share-ссылки; главная страница"
+    content: "Phase 7: Hono API — auth (email+password), CRUD Project, ShareLink; главная страница"
     status: pending
   - id: phase-8-public-polish
-    content: "Phase 8: публичная страница /p/:id, e2e-полировка, деплой на Vercel"
+    content: "Phase 8: публичная страница /p/:slug, e2e-полировка, деплой на Vercel"
     status: pending
 isProject: true
 ---
@@ -38,24 +38,24 @@ isProject: true
 
 Документы-источники истины:
 
-- `docs/PRD.md` — полная продуктовая спецификация (страницы, панели, кастомизация)
+- `docs/PRD.md` — полная продуктовая спецификация + **канонические имена полей** (`Project`, `Record`, `Settings`, `Theme`, `ShareLink`)
 - `docs/STITCH_DESIGN_GUIDE.md` — задание для дизайн-агента в Google Stitch
 - `docs/DEVELOPMENT_PLAN.md` — пошаговый план автономной разработки и тестирования
 
-## Решения (зафиксировано, обновлено 16.07.2026)
+## Решения (зафиксировано, обновлено 17.07.2026)
 
-- Данные: экспорт Telegram Desktop (`result.json` / ZIP); **один экспорт = одна запись (чат) в рейтинге**, записи добавляются по одной через Data → Add record
-- Top N настраиваемый (дефолт 15), сглаживание по интервалу k дней настраиваемое
-- Аватары: ручная загрузка (ресайз до ~128px на клиенте)
-- Превью + MP4 в браузере (WebCodecs, fallback MediaRecorder), один canvas для превью и экспорта
-- Auth: простая — email + password, сессии; без OAuth в MVP
-- Шаринг: view-only ссылки, несколько ссылок на проект с управлением (создать/отозвать), длинные секретные id
+- Данные: экспорт Telegram Desktop (`result.json` / ZIP); **один экспорт = один `Record`**, записи добавляются по одной через Data → Add record
+- `settings.topN` настраиваемый (дефолт 15), `settings.smoothingDays` настраиваемое
+- Аватары: ручная загрузка → `Record.avatarDataUrl` (ресайз до ~128px на клиенте)
+- Превью + MP4 в браузере (WebCodecs, fallback MediaRecorder), один canvas: `render(ctx, project, tSec)`
+- Auth: email + password, cookie sessions; без OAuth в MVP
+- Шаринг: view-only `ShareLink` с длинным `slug`, URL `/p/:slug` (не project `id`); create / list / revoke
 - Главная страница: проекты пользователя в стиле Google Drive
-- Редактор: Figma-подобная бесконечная плоскость (pan/zoom), панели по кнопкам Total/Data/Share слева и Design справа, плеер снизу
+- Редактор: Figma-подобная бесконечная плоскость (pan/zoom); панели Total / Data / Share слева, Design справа; плеер снизу
 - Backend: Hono + SQLite локально / Turso (libSQL) в проде
 - Деплой: Vercel (фронт — static, API — functions), preview-деплои на PR
-- Язык интерфейса: английский
-- Дизайн: создаётся в Google Stitch, доступ через Stitch MCP server; движок рейтинга потребляет дизайн через theme-токены
+- Язык интерфейса: английский; UI-лейблы экспорта: **Download a video**
+- Дизайн: Google Stitch через Stitch MCP; UI-токены из DESIGN.md; рейтинг потребляет `project.theme`
 
 ## Архитектура
 
@@ -83,12 +83,12 @@ flowchart TB
     api --> db
     links --> db
   end
-  engine -->|save_aggregates_plus_theme| api
+  engine -->|save_aggregates_settings_theme| api
   api -->|GET_p_slug| engine
 ```
 
 **Клиент** — единственный источник правды для анимации и экспорта (один canvas-движок).
-**Сервер** — auth, CRUD проектов (агрегаты + тема + метаданные, без сырых сообщений), share-ссылки.
+**Сервер** — auth, CRUD `Project` (агрегаты + `settings` + `theme` + метаданные, без сырых сообщений), `ShareLink`.
 
 ## Стек
 
@@ -96,8 +96,8 @@ flowchart TB
 |-------|--------|
 | Repo | pnpm monorepo: `apps/web`, `apps/api`, `packages/shared` (типы, парсер, движок) |
 | Frontend | Vite + React + TypeScript |
-| State | Zustand (project, theme, playback, editor-canvas) |
-| Анимация | Canvas 2D bar-race, детерминированный `render(state, t)` |
+| State | Zustand (`project` incl. `settings`/`theme`/`records`, `playback`, `editorCanvas`) |
+| Анимация | Canvas 2D bar-race, `render(ctx, project, tSec)` |
 | Парсинг | Web Worker (ZIP/JSON → дневные cumulative серии) |
 | MP4 | WebCodecs + `mp4-muxer`; fallback `canvas.captureStream` + MediaRecorder |
 | Backend | Hono; SQLite (dev) / Turso libSQL (prod); сессии в cookie |
@@ -106,6 +106,8 @@ flowchart TB
 
 ## Модель данных проекта
 
+Канон — в `docs/PRD.md` §2. Кратко:
+
 ```ts
 type Project = {
   id: string
@@ -113,18 +115,20 @@ type Project = {
   title: string
   createdAt: string
   updatedAt: string
-  ticks: string[] // ISO dates, дневная сетка
-  records: {
-    id: string
-    title: string        // переименовываемое
-    sourceChatTitle: string
-    color?: string       // per-card override
-    avatarDataUrl?: string
-    visible: boolean
-    counts: number[]     // cumulative per tick
-  }[]
-  settings: TotalSettings // topN, датовый интервал, scale, screenSize, speed, delays, smoothing
-  theme: Theme            // background, card, timer — см. PRD
+  ticks: string[] // ISO dates
+  records: Record[] // title, sourceChatTitle, color?, nameColor?, avatarDataUrl?, visible, counts[]
+  settings: Settings // topN, dateStart, dateEnd, scalePercent, screenWidth/Height,
+                     // speedMode: "totalLength"|"daysPerSecond", speedValue,
+                     // startDelaySec, finishDelaySec, smoothingDays
+  theme: Theme // background, timer, card — см. PRD
+}
+
+type ShareLink = {
+  id: string
+  projectId: string
+  slug: string // публичный URL: /p/:slug
+  createdAt: string
+  revokedAt?: string
 }
 ```
 
@@ -138,7 +142,7 @@ type Project = {
 | Safari без WebCodecs | MediaRecorder fallback, честный UI-нотис |
 | Расхождение preview/export | Один canvas-движок для обоих |
 | Тяжёлые аватары | Ресайз до ~128px WebP/JPEG на клиенте |
-| Privacy | Только агрегаты, секретные длинные id, noindex |
+| Privacy | Только агрегаты, секретные длинные `slug`, noindex |
 | Figma-подобный canvas UX сложен | Ограничить: один объект на плоскости, только pan/zoom/select |
 
 ## Вне MVP

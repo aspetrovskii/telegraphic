@@ -26,7 +26,7 @@ State: Zustand. Tests: Vitest (unit), Playwright (e2e + visual snapshots). Deplo
 
 ## Hard rules
 
-1. **Engine determinism**: everything in `packages/shared` engine is a pure function of `(project, tSec)`. No `Date.now()`, `Math.random()`, DOM access, or React imports in the render path. Preview, MP4 export, and visual tests all rely on this.
+1. **Engine determinism**: canvas engine entry point is `render(ctx, project, tSec)` — a pure function of `(project, tSec)` aside from drawing into `ctx`. No `Date.now()`, `Math.random()`, DOM access, or React imports in the render path. Preview, MP4 export, and visual tests all rely on this. Canonical types/field names: `docs/PRD.md` (`Project`, `Record`, `Settings`, `Theme`, `ShareLink`; public URL `/p/:slug`).
 2. **Privacy**: raw Telegram messages never leave the browser. The API stores only daily aggregates + theme + metadata. Never log message content.
 3. **Design tokens only**: UI colors/radii/fonts come from the DESIGN.md-derived tokens (CSS variables). No hard-coded hex values in components. Fetch screens from Stitch MCP before building UI; don't invent layouts.
 4. **One canvas engine** for preview and export — never fork rendering logic.

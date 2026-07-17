@@ -21,7 +21,7 @@ Rejected alternatives (for the record):
 ### Autonomy mechanics in Cursor
 
 - **AGENTS.md** (repo root) — standing instructions every agent reads: stack, commands, conventions, testing contract, "definition of done".
-- **`.cursor/rules/`** — scoped rules: e.g. an engine rule ("engine must stay deterministic: pure `render(state, t)`, no `Date.now`/`Math.random` in render path"), an API rule (validation with zod, no raw messages stored), a UI rule (tokens from DESIGN.md only, no hard-coded colors).
+- **`.cursor/rules/`** — scoped rules: e.g. an engine rule ("engine must stay deterministic: pure `render(ctx, project, tSec)`, no `Date.now`/`Math.random` in render path"), an API rule (validation with zod, no raw messages stored), a UI rule (tokens from DESIGN.md only, no hard-coded colors).
 - **Stitch MCP** — coding agents fetch screens, tokens, and generated markup for each UI phase; the design is never re-invented by hand.
 - **Hooks** — post-edit hook running `pnpm lint --fix` + `pnpm typecheck` on changed packages, so agents self-correct before committing.
 - **Babysit skill** — after a phase PR is opened, run the babysit loop to keep it merge-ready (CI fixes, review-comment triage, conflict resolution).
@@ -33,7 +33,7 @@ Rejected alternatives (for the record):
 - **Monorepo (pnpm workspaces)**:
   - `apps/web` — Vite + React + TS frontend
   - `apps/api` — Hono backend (SQLite dev / Turso prod)
-  - `packages/shared` — Project/Theme types, parser, bar-race engine (framework-free, fully unit-tested)
+  - `packages/shared` — `Project` / `Record` / `Settings` / `Theme` / `ShareLink` types (per `docs/PRD.md`), parser, bar-race engine (framework-free, fully unit-tested)
 - **Branching**: trunk-based; `feat/phase-N-<slug>` branches; squash-merge to `main`; linear history.
 - **Conventional Commits** + PR title lint; CHANGELOG later via release-please if needed.
 - **Branch protection on `main`**: required status checks (ci, e2e), required Bugbot review pass, no direct pushes.
@@ -53,12 +53,12 @@ Monorepo skeleton, tooling (TS strict, ESLint, Prettier, Vitest, Playwright), CI
 
 ### Phase 1 — Parser & data model (`packages/shared`)
 
-Telegram Desktop export parser (single-chat `result.json` / ZIP → record with daily cumulative series), Web Worker wrapper in `apps/web`, fixtures (small dummy exports committed to repo), edge cases (service messages, empty days, timezone). Project/Record/Settings/Theme types finalized per PRD.
+Telegram Desktop export parser (single-chat `result.json` / ZIP → `Record` with daily cumulative `counts` aligned to `ticks`), Web Worker wrapper in `apps/web`, fixtures (small dummy exports committed to repo), edge cases (service messages, empty days, timezone). Canonical types from PRD finalized: `Project`, `Record`, `Settings`, `Theme`, `ShareLink`.
 **Accept**: unit tests cover fixtures incl. malformed input; parsing 50MB JSON stays off the main thread.
 
 ### Phase 2 — Bar race engine (`packages/shared`)
 
-Deterministic `render(ctx, project, tSec)`: Top N, rank/width lerp, enter/exit animation, dynamic axis, timer label, all theme tokens applied. No DOM/React dependencies.
+Deterministic `render(ctx, project, tSec)`: `settings.topN`, rank/width lerp, enter/exit animation, dynamic axis, `theme.timer`, all `theme` fields applied. No DOM/React dependencies.
 **Accept**: unit tests for layout math (ranking, interpolation, axis ceiling); Playwright visual snapshots of fixed frames (t=0, mid, end) on a fixture project; identical output across two runs (determinism test).
 
 ### Phase 3 — Editor shell (design from Stitch)
@@ -68,28 +68,28 @@ Fetch `editor-default` screen + DESIGN.md via Stitch MCP, map tokens to CSS vari
 
 ### Phase 4 — Total & Data panels
 
-All Total controls live-bound via Zustand → engine (Top N, dates interval, scale, screen size, speed modes, delays, smoothing). Data panel: list, search, rename, delete, visibility, Add record → import modal → worker parsing → record appears. Avatar upload with client-side resize.
+All Total controls live-bound via Zustand → `project.settings` → engine (`topN`, `dateStart`/`dateEnd`, `scalePercent`, `screenWidth`/`screenHeight`, `speedMode`/`speedValue`, `startDelaySec`/`finishDelaySec`, `smoothingDays`). Data panel: list, search, rename (`title`), delete, `visible` toggle, Add record → import modal → worker parsing → `Record` appears. Avatar upload → `avatarDataUrl` with client-side resize.
 **Accept**: browser test — add fixture export, tweak every Total control, changes visible immediately; rename/hide/delete flows work.
 
 ### Phase 5 — Design panels
 
-Design panel per Stitch screens: Background (frontiers, filling, full timer customization) and Card (global settings + per-card overrides) as specified in PRD 2.2. Every control maps to a Theme field consumed by the engine.
+Design panel per Stitch screens: Background (`theme.background` + `theme.timer`) and Card (`theme.card` + per-record overrides `color` / `nameColor` / `avatarDataUrl`) as specified in PRD. Every control maps to a `Theme` / `Record` field consumed by the engine.
 **Accept**: visual snapshot matrix — each theme control changes exactly its target; timer formats and animations verified frame-by-frame.
 
 ### Phase 6 — Player polish & MP4 export
 
-Export pipeline: engine → WebCodecs frames → mp4-muxer → download, with progress UI; MediaRecorder/WebM fallback + browser notice. Start/finish delays honored.
-**Accept**: exported MP4 duration/fps/size match settings; export of a 30s 1080p fixture completes in Chrome; fallback path produces a playable file.
+Export pipeline: engine → WebCodecs frames → mp4-muxer → download, with progress UI; MediaRecorder/WebM fallback + browser notice. `startDelaySec` / `finishDelaySec` honored. UI action label: **Download a video**.
+**Accept**: exported MP4 duration/fps/size match `settings`; export of a 30s 1080p fixture completes in Chrome; fallback path produces a playable file.
 
 ### Phase 7 — Backend, auth & home page
 
-Hono API: email+password auth (argon2, cookie sessions), projects CRUD (aggregates+theme only, payload limit), share links (create/list/revoke, long slugs). Home page per Stitch design: grid, search, rename/duplicate/delete, thumbnails. SQLite dev / Turso prod wiring.
+Hono API: email+password auth (argon2, cookie sessions), projects CRUD (aggregates + `settings` + `theme` only, payload limit), `ShareLink` CRUD (create/list/revoke, long `slug`). Home page per Stitch design: grid, search, rename/duplicate/delete, thumbnails. SQLite dev / Turso prod wiring.
 **Accept**: API integration tests; e2e — sign up, save project, see it on home, reload persists.
 
 ### Phase 8 — Sharing, public page & release polish
 
-`/p/:slug` public player page (view-only, Download MP4, Duplicate to my projects, noindex), Share panel wired to API, empty states, error states, oversized-payload UX, cross-browser pass (Chrome/Firefox/Safari fallback notice), Lighthouse pass, README/user docs.
-**Accept**: full e2e journey — import → customize → save → share link in incognito → download MP4 → duplicate; production deploy green.
+`/p/:slug` public player page (view-only, **Download a video**, **Duplicate to my projects**, noindex), Share panel wired to API, empty states, error states, oversized-payload UX, cross-browser pass (Chrome/Firefox/Safari fallback notice), Lighthouse pass, README/user docs.
+**Accept**: full e2e journey — import → customize → save → share link in incognito → Download a video → duplicate; production deploy green.
 
 ## 4. Parallelization map
 
