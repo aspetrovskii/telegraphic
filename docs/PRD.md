@@ -5,7 +5,7 @@ Browser app for creating interactive **bar chart race videos** of a user's Teleg
 - Live customization applied in real time on the site
 - Projects can be saved, shared via view-only links, previewed on-site, and downloaded as MP4
 - UI language: **English**
-- Design source of truth: Google Stitch project (accessed via Stitch MCP server), see `docs/STITCH_DESIGN_GUIDE.md`
+- Design authority: Google Stitch (via Stitch MCP) for tokens, visual direction, and information architecture — see `docs/STITCH_DESIGN_GUIDE.md`. Coding agents adapt from Stitch; they must not pixel-copy individual screen layouts or generated code
 - Technical decisions: `.cursor/plans/telegram_bar_race_mvp_28875287.plan.md`
 
 ## 1. Users and auth

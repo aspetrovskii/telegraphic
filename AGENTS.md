@@ -10,7 +10,7 @@ Read before coding:
 
 - `docs/PRD.md` — product spec (pages, panels, every customization option)
 - `docs/DEVELOPMENT_PLAN.md` — phases, quality gate, your phase's acceptance checklist
-- `docs/STITCH_DESIGN_GUIDE.md` — design comes from Google Stitch via MCP; screen names listed there
+- `docs/STITCH_DESIGN_GUIDE.md` — Stitch is the primary design authority (tokens, direction, IA); screen names listed there. Adapt layouts — do not pixel-copy individual Stitch screens
 
 ## Stack & layout
 
@@ -28,7 +28,7 @@ State: Zustand. Tests: Vitest (unit), Playwright (e2e + visual snapshots). Deplo
 
 1. **Engine determinism**: everything in `packages/shared` engine is a pure function of `(project, tSec)`. No `Date.now()`, `Math.random()`, DOM access, or React imports in the render path. Preview, MP4 export, and visual tests all rely on this.
 2. **Privacy**: raw Telegram messages never leave the browser. The API stores only daily aggregates + theme + metadata. Never log message content.
-3. **Design tokens only**: UI colors/radii/fonts come from the DESIGN.md-derived tokens (CSS variables). No hard-coded hex values in components. Fetch screens from Stitch MCP before building UI; don't invent layouts.
+3. **Design from Stitch, don't clone screens**: UI colors/radii/fonts come from the DESIGN.md-derived tokens (CSS variables). No hard-coded hex values in components. Before building UI, fetch Stitch via MCP for tokens, visual direction, and information architecture — treat screens as the main design reference, then implement the product UI to match PRD behavior. Do not reproduce Stitch page layouts or generated code pixel-for-pixel.
 4. **One canvas engine** for preview and export — never fork rendering logic.
 5. UI copy in English. Validation at boundaries with zod (file imports, API bodies); trust internal code.
 6. Conventional Commits; squash-merge PRs; keep `main` green.
