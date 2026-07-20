@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from 'react'
 import { render } from '@telegraphic/shared'
-import { useEditorStore } from './EditorContext'
+import { useEditorStore } from './useEditorStore'
 
 /**
  * Rating rectangle — single object on the infinite canvas.
@@ -30,6 +30,8 @@ export function RatingRectangle() {
       style={{ width, height }}
       data-testid="rating-rectangle"
       onPointerDown={(e) => {
+        // Allow space/middle-button pan to bubble to the canvas viewport.
+        if (e.button !== 0) return
         e.stopPropagation()
         setRatingSelected(true)
       }}

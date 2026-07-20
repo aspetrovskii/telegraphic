@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useEditorStore, useEditorStoreApi } from './EditorContext'
+import { useEditorStore, useEditorStoreApi } from './useEditorStore'
 import { PLAYBACK_FPS } from './editorStore'
 
 function formatTime(sec: number): string {
@@ -60,8 +60,9 @@ export function PlayerBar() {
 
   // Expose frame counter for e2e (30fps smoke)
   useEffect(() => {
-    ;(window as unknown as { __telegraphicPlaybackFrames?: () => number }).__telegraphicPlaybackFrames =
-      () => frameCountRef.current
+    ;(
+      window as unknown as { __telegraphicPlaybackFrames?: () => number }
+    ).__telegraphicPlaybackFrames = () => frameCountRef.current
     return () => {
       delete (window as unknown as { __telegraphicPlaybackFrames?: () => number })
         .__telegraphicPlaybackFrames

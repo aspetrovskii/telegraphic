@@ -1,4 +1,4 @@
-import { EditorProvider } from './EditorContext'
+import { EditorProvider } from './useEditorStore'
 import { InfiniteCanvas } from './InfiniteCanvas'
 import { RatingRectangle } from './RatingRectangle'
 import { ToolbarLeft } from './ToolbarLeft'

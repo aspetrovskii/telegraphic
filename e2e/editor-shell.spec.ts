@@ -48,16 +48,18 @@ test.describe('editor shell', () => {
     expect(afterZoom).not.toBe(before)
     await expect(page.getByTestId('zoom-percent')).not.toHaveText('100%')
 
-    // Pan with middle-button drag
+    // Pan with Space + drag (also covered: middle-mouse in product)
     const viewport = page.getByTestId('canvas-viewport')
     const box = await viewport.boundingBox()
     if (!box) throw new Error('viewport missing')
     const cx = box.x + box.width / 2
     const cy = box.y + box.height / 2
+    await page.keyboard.down('Space')
     await page.mouse.move(cx, cy)
-    await page.mouse.down({ button: 'middle' })
-    await page.mouse.move(cx + 120, cy + 80)
-    await page.mouse.up({ button: 'middle' })
+    await page.mouse.down()
+    await page.mouse.move(cx + 120, cy + 80, { steps: 5 })
+    await page.mouse.up()
+    await page.keyboard.up('Space')
     const afterPan = await world.evaluate((el) => el.style.transform)
     expect(afterPan).not.toBe(afterZoom)
 
@@ -75,9 +77,8 @@ test.describe('editor shell', () => {
     // Wait ~500ms of wall time → expect ~15 frames at 30fps (± tolerance)
     await page.waitForTimeout(500)
     const frames = await page.evaluate(() => {
-      const fn = (
-        window as unknown as { __telegraphicPlaybackFrames?: () => number }
-      ).__telegraphicPlaybackFrames
+      const fn = (window as unknown as { __telegraphicPlaybackFrames?: () => number })
+        .__telegraphicPlaybackFrames
       return fn ? fn() : 0
     })
     expect(frames).toBeGreaterThanOrEqual(10)

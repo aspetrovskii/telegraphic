@@ -1,4 +1,4 @@
-import { useEditorStore } from './EditorContext'
+import { useEditorStore } from './useEditorStore'
 
 export function ToolbarRight() {
   const rightPanel = useEditorStore((s) => s.rightPanel)

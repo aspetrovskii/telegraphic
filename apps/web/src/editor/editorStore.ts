@@ -49,10 +49,7 @@ function loadProject(projectId: string): Project {
   return createEngineFixtureProject()
 }
 
-function computeFit(
-  project: Project,
-  viewport: { width: number; height: number },
-): CanvasView {
+function computeFit(project: Project, viewport: { width: number; height: number }): CanvasView {
   const { width: frameW, height: frameH } = project.settings.screenSize
   const pad = 80
   const availW = Math.max(1, viewport.width - pad * 2)
@@ -104,4 +101,3 @@ export function createEditorStore(projectId: string) {
 }
 
 export type EditorStore = ReturnType<typeof createEditorStore>
-export type EditorStoreApi = EditorStore

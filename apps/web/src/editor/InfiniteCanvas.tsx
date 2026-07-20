@@ -1,5 +1,5 @@
-import { useEffect, useRef, type ReactNode, type PointerEvent as ReactPointerEvent } from 'react'
-import { useEditorStore, useEditorStoreApi } from './EditorContext'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { useEditorStore, useEditorStoreApi } from './useEditorStore'
 
 const MIN_ZOOM = 0.1
 const MAX_ZOOM = 4
@@ -41,7 +41,6 @@ export function InfiniteCanvas({ children }: Props) {
     })
     ro.observe(el)
     setViewport(el.clientWidth, el.clientHeight)
-    // Fit once on mount after viewport is known
     requestAnimationFrame(() => fitCanvas())
     return () => ro.disconnect()
   }, [setViewport, fitCanvas])
@@ -95,59 +94,72 @@ export function InfiniteCanvas({ children }: Props) {
     return () => el.removeEventListener('wheel', onWheel)
   }, [setCanvas, store])
 
-  const beginPan = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const middle = e.button === 1
-    const space = spaceDown.current && e.button === 0
-    if (!middle && !space) {
-      if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('canvas-world')) {
-        setRatingSelected(false)
+  // Capture-phase pan so Space/middle-drag works even over the rating rectangle.
+  useEffect(() => {
+    const el = viewportRef.current
+    if (!el) return
+
+    const onPointerDown = (e: PointerEvent) => {
+      const middle = e.button === 1
+      const space = spaceDown.current && e.button === 0
+      if (!middle && !space) {
+        const target = e.target as HTMLElement
+        if (target === el || target.classList.contains('canvas-world')) {
+          setRatingSelected(false)
+        }
+        return
       }
-      return
+      e.preventDefault()
+      e.stopPropagation()
+      const { canvas: c } = store.getState()
+      dragging.current = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        originPanX: c.panX,
+        originPanY: c.panY,
+      }
+      el.setPointerCapture(e.pointerId)
     }
-    e.preventDefault()
-    const { canvas: c } = store.getState()
-    dragging.current = {
-      pointerId: e.pointerId,
-      startX: e.clientX,
-      startY: e.clientY,
-      originPanX: c.panX,
-      originPanY: c.panY,
-    }
-    e.currentTarget.setPointerCapture(e.pointerId)
-  }
 
-  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const d = dragging.current
-    if (!d || d.pointerId !== e.pointerId) return
-    setCanvas({
-      panX: d.originPanX + (e.clientX - d.startX),
-      panY: d.originPanY + (e.clientY - d.startY),
-    })
-  }
-
-  const endPan = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (dragging.current?.pointerId === e.pointerId) {
-      dragging.current = null
+    const onPointerMove = (e: PointerEvent) => {
+      const d = dragging.current
+      if (!d || d.pointerId !== e.pointerId) return
+      setCanvas({
+        panX: d.originPanX + (e.clientX - d.startX),
+        panY: d.originPanY + (e.clientY - d.startY),
+      })
     }
-  }
+
+    const endPan = (e: PointerEvent) => {
+      if (dragging.current?.pointerId === e.pointerId) {
+        dragging.current = null
+      }
+    }
+
+    const onAuxClick = (e: MouseEvent) => {
+      if (e.button === 1) e.preventDefault()
+    }
+
+    el.addEventListener('pointerdown', onPointerDown, true)
+    el.addEventListener('pointermove', onPointerMove)
+    el.addEventListener('pointerup', endPan)
+    el.addEventListener('pointercancel', endPan)
+    el.addEventListener('auxclick', onAuxClick)
+    return () => {
+      el.removeEventListener('pointerdown', onPointerDown, true)
+      el.removeEventListener('pointermove', onPointerMove)
+      el.removeEventListener('pointerup', endPan)
+      el.removeEventListener('pointercancel', endPan)
+      el.removeEventListener('auxclick', onAuxClick)
+    }
+  }, [setCanvas, setRatingSelected, store])
 
   const zoomPercent = Math.round(canvas.zoom * 100)
 
   return (
     <div className="infinite-canvas" data-testid="infinite-canvas">
-      <div
-        ref={viewportRef}
-        className="infinite-canvas__viewport"
-        data-testid="canvas-viewport"
-        onPointerDown={beginPan}
-        onPointerMove={onPointerMove}
-        onPointerUp={endPan}
-        onPointerCancel={endPan}
-        onAuxClick={(e) => {
-          // Prevent middle-click autoscroll chrome
-          if (e.button === 1) e.preventDefault()
-        }}
-      >
+      <div ref={viewportRef} className="infinite-canvas__viewport" data-testid="canvas-viewport">
         <div
           className="canvas-world"
           data-testid="canvas-world"

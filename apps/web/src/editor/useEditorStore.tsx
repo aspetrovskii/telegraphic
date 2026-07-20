@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- provider + store hooks share one module */
 import { createContext, useContext, useRef, type ReactNode } from 'react'
 import { useStore } from 'zustand'
 import { createEditorStore, type EditorStore } from './editorStore'
@@ -20,18 +21,19 @@ export function EditorProvider({
   )
 }
 
-export function useEditorStore<T>(selector: (state: ReturnType<EditorStore['getState']>) => T): T {
+function useEditorStoreContext(): EditorStore {
   const store = useContext(EditorStoreContext)
   if (!store) {
-    throw new Error('useEditorStore must be used within EditorProvider')
+    throw new Error('Editor store hooks must be used within EditorProvider')
   }
+  return store
+}
+
+export function useEditorStore<T>(selector: (state: ReturnType<EditorStore['getState']>) => T): T {
+  const store = useEditorStoreContext()
   return useStore(store, selector)
 }
 
 export function useEditorStoreApi(): EditorStore {
-  const store = useContext(EditorStoreContext)
-  if (!store) {
-    throw new Error('useEditorStoreApi must be used within EditorProvider')
-  }
-  return store
+  return useEditorStoreContext()
 }

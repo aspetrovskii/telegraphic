@@ -1,4 +1,4 @@
-import { useEditorStore } from './EditorContext'
+import { useEditorStore } from './useEditorStore'
 import type { LeftPanelId, RightPanelId } from './editorStore'
 
 const LEFT_TITLES: Record<LeftPanelId, string> = {
