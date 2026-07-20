@@ -3,19 +3,25 @@
 Derived from `docs/STITCH_DESIGN_GUIDE.md` §4 (Stitch MCP unavailable in this environment).
 Coding agents map these to CSS variables — do not hard-code hex in components.
 
+Implemented in `apps/web/src/styles/tokens.css` (imported by `styles.css`).
+
 ## Colors
 
 | Token | CSS variable | Value | Use |
 |---|---|---|---|
-| `color.bg.canvas` | `--color-bg-canvas` | `#E8ECF0` | App / home canvas |
+| `color.bg.app` | `--color-bg-app` | `#F0F2F5` | Editor chrome |
+| `color.bg.canvas` | `--color-bg-canvas` | `#E8ECF0` | App / home / infinite canvas |
 | `color.bg.panel` | `--color-bg-panel` | `#FFFFFF` | Panels, auth card |
 | `color.bg.surface` | `--color-bg-surface` | `#F7F9FB` | Subtle surfaces, thumbnails |
 | `color.text.primary` | `--color-text-primary` | `#1A1D21` | Headings, titles |
 | `color.text.secondary` | `--color-text-secondary` | `#5C6570` | Meta, placeholders |
+| `color.text.on-accent` | `--color-text-on-accent` / `--color-on-accent` | `#FFFFFF` | Text on accent buttons |
 | `color.accent` | `--color-accent` | `#2AABEE` | Primary actions (Telegram-adjacent) |
 | `color.accent.hover` | `--color-accent-hover` | `#1E96D5` | Accent hover |
 | `color.danger` | `--color-danger` | `#D94A4A` | Destructive |
 | `color.border` | `--color-border` | `#D5DBE1` | Hairlines / inputs |
+| `color.border.strong` | `--color-border-strong` | `#98A2B3` | Stronger borders |
+| `color.selection` | `--color-selection` | `#2AABEE` | Rating rectangle selection |
 
 ## Radii
 
@@ -43,3 +49,19 @@ Coding agents map these to CSS variables — do not hard-code hex in components.
 |---|---|
 | Panel | `--shadow-panel`: `0 4px 24px color-mix(in srgb, #1A1D21 8%, transparent)` |
 | Card | `--shadow-card`: `0 1px 3px color-mix(in srgb, #1A1D21 10%, transparent)` |
+| Toolbar | `--shadow-toolbar`: `0 1px 3px color-mix(in srgb, #1A1D21 8%, transparent)` |
+
+## Editor IA (Phase 3 — `editor-default`)
+
+- Top-left: back, title, `Total` / `Data` / `Share` toggles
+- Top-right: `Design` toggle
+- Center: infinite canvas (dot grid) + one rating rectangle
+- Bottom: preview player (play/pause, scrub, time)
+- Zoom controls: canvas bottom-right (percent + fit)
+- Empty docked panels until Phases 4–5
+
+Adapt layouts to PRD behavior; do not pixel-copy Stitch frames.
+
+## Rating defaults (engine / Theme)
+
+See `DEFAULT_BAR_PALETTE` / `createDefaultTheme` in `@telegraphic/shared`.
