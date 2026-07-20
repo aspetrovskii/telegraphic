@@ -123,11 +123,14 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
     const inB = rankB.has(id)
     const rA = inA ? rankA.get(id)! : exitRank
     const rB = inB ? rankB.get(id)! : exitRank
-    const vA = inA ? (valueA.get(id) ?? 0) : (valuesA.get(id) ?? 0)
-    const vB = inB ? (valueB.get(id) ?? 0) : (valuesB.get(id) ?? 0)
 
     const entering = !inA && inB
     const exiting = inA && !inB
+    // Outside Top N: treat value as 0 so enter/exit grow/shrink without
+    // exceeding the Top-N axis ceiling mid-transition.
+    const vA = inA ? (valueA.get(id) ?? 0) : 0
+    const vB = inB ? (valueB.get(id) ?? 0) : 0
+
     // PRD §3: linear interpolation of bar widths and Y positions (rank swaps).
     const rank = lerp(rA, rB, t)
     const value = lerp(vA, vB, t)
@@ -137,7 +140,8 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
     else if (exiting) opacity = 1 - t
 
     const y = padTop + rank * rowStride
-    const widthPx = Math.max(0, (value / axisCeiling) * trackWidth * scale)
+    const capped = Math.min(value, axisCeiling)
+    const widthPx = Math.max(0, (capped / axisCeiling) * trackWidth * scale)
 
     bars.push({
       recordId: id,

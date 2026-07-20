@@ -13,16 +13,19 @@ type Props = {
 export function EngineFixturePage({ tSec }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const project = useMemo(() => createEngineFixtureProject(), [])
-  const totalSeconds = useMemo(() => computeProjectDuration(project).totalSeconds, [project])
+  const duration = useMemo(() => computeProjectDuration(project), [project])
 
   const resolvedT = useMemo(() => {
     if (tSec !== undefined) return tSec
     const raw = new URLSearchParams(window.location.search).get('t')
-    if (raw === 'mid') return totalSeconds / 2
-    if (raw === 'end') return totalSeconds
+    // Mid = halfway through the animated race (delays excluded).
+    if (raw === 'mid') {
+      return Math.max(0, project.settings.startDelay) + duration.animationSeconds / 2
+    }
+    if (raw === 'end') return duration.totalSeconds
     const n = raw === null ? 0 : Number(raw)
     return Number.isFinite(n) ? n : 0
-  }, [tSec, totalSeconds])
+  }, [tSec, project, duration])
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current
