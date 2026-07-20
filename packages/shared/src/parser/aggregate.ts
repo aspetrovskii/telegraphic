@@ -26,7 +26,7 @@ export type ProgressCallback = (progress: ParseProgress) => void
 /**
  * Calendar day from Telegram's local `date` field (`YYYY-MM-DDTHH:mm:ss`).
  * Prefer this over UTC conversion of `date_unixtime` so day buckets match
- * the exporter's local timezone.
+ * the exporter's local timezone. Returns null for non-calendar / impossible dates.
  */
 export function dayKeyFromTelegramDate(date: string): string | null {
   if (date.length < 10) return null
@@ -57,10 +57,22 @@ export function aggregateDailyCumulative(
   for (let i = 0; i < messages.length; i++) {
     const msg = messages[i]!
     if (!isCountableMessage(msg)) continue
+
     const dateStr = msg.date
-    if (!dateStr) continue
+    if (!dateStr) {
+      throw new ParseError(
+        'INVALID_MESSAGE_DATE',
+        `Countable message id=${String(msg.id)} is missing a date field.`,
+      )
+    }
     const day = dayKeyFromTelegramDate(dateStr)
-    if (!day) continue
+    if (!day) {
+      throw new ParseError(
+        'INVALID_MESSAGE_DATE',
+        `Countable message id=${String(msg.id)} has an invalid date "${dateStr}".`,
+      )
+    }
+
     dailyIncrements.set(day, (dailyIncrements.get(day) ?? 0) + 1)
     messageTotal++
     if (onProgress && total > 0 && i % 2048 === 0) {
@@ -78,12 +90,30 @@ export function aggregateDailyCumulative(
   const days = [...dailyIncrements.keys()].sort()
   const first = days[0]!
   const last = days[days.length - 1]!
-  const ticks = enumerateDays(first, last)
+
+  let ticks: string[]
+  try {
+    ticks = enumerateDays(first, last)
+  } catch (err) {
+    throw new ParseError(
+      'INVALID_MESSAGE_DATE',
+      `Could not build daily tick range from ${first} to ${last}.`,
+      { cause: err },
+    )
+  }
+
   const counts = new Array<number>(ticks.length)
   let cumulative = 0
   for (let i = 0; i < ticks.length; i++) {
     cumulative += dailyIncrements.get(ticks[i]!) ?? 0
     counts[i] = cumulative
+  }
+
+  if (cumulative !== messageTotal) {
+    throw new ParseError(
+      'INVALID_MESSAGE_DATE',
+      `Internal aggregate mismatch: counted ${messageTotal} messages but series ends at ${cumulative}.`,
+    )
   }
 
   onProgress?.({ stage: 'aggregating', ratio: 1 })

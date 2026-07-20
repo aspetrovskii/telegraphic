@@ -89,6 +89,12 @@ describe('ticks helpers', () => {
     )
     expect(aligned).toEqual([0, 5, 5, 9, 9])
   })
+
+  it('rejects unsorted fromTicks', () => {
+    expect(() =>
+      alignCountsToTicks(['2024-01-03', '2024-01-01'], [1, 2], ['2024-01-01', '2024-01-03']),
+    ).toThrow(/sorted ascending/)
+  })
 })
 
 describe('parseTelegramChatExportJson — valid fixtures', () => {
@@ -181,6 +187,24 @@ describe('parseTelegramChatExportJson — malformed fixtures', () => {
 
   it('rejects empty messages array', () => {
     expect(() => parseTelegramChatExport({ name: 'Empty', messages: [] })).toThrow(ParseError)
+  })
+  it('rejects countable messages with missing or impossible dates', () => {
+    expect(() =>
+      parseTelegramChatExport({
+        name: 'Bad dates',
+        messages: [{ id: 1, type: 'message', text: 'no date' }],
+      }),
+    ).toThrow(ParseError)
+
+    try {
+      parseTelegramChatExport({
+        name: 'Impossible',
+        messages: [{ id: 1, type: 'message', date: '2024-02-30T12:00:00', text: 'x' }],
+      })
+    } catch (err) {
+      expect(err).toBeInstanceOf(ParseError)
+      expect((err as ParseError).code).toBe('INVALID_MESSAGE_DATE')
+    }
   })
 })
 

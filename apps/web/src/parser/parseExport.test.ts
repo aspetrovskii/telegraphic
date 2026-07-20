@@ -107,4 +107,43 @@ describe('parseExportInWorker bridge', () => {
     await parseExportInWorker(payload, { createWorker: factory })
     expect(factory).toHaveBeenCalledTimes(1)
   })
+
+  it('fails when onProgress throws instead of hanging', async () => {
+    await expect(
+      parseExportInWorker(
+        new TextEncoder().encode(
+          JSON.stringify({
+            name: 'x',
+            messages: [{ id: 1, type: 'message', date: '2024-01-01T00:00:00' }],
+          }),
+        ),
+        {
+          createWorker: () => new FakeWorker() as unknown as Worker,
+          onProgress: () => {
+            throw new Error('progress boom')
+          },
+        },
+      ),
+    ).rejects.toThrow('progress boom')
+  })
+
+  it('fails on unknown worker message types', async () => {
+    class WeirdWorker extends FakeWorker {
+      override postMessage(data: ParseWorkerRequest): void {
+        queueMicrotask(() => {
+          this.dispatchEvent(
+            new MessageEvent('message', {
+              data: { type: 'weird', requestId: data.requestId },
+            }),
+          )
+        })
+      }
+    }
+
+    await expect(
+      parseExportInWorker(new TextEncoder().encode('{}'), {
+        createWorker: () => new WeirdWorker() as unknown as Worker,
+      }),
+    ).rejects.toBeInstanceOf(ParseWorkerClientError)
+  })
 })

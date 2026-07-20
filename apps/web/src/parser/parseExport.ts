@@ -83,10 +83,15 @@ export function parseExportInWorker(
 
     const onMessage = (event: MessageEvent<ParseWorkerOutbound>) => {
       const msg = event.data
-      if (!msg || msg.requestId !== requestId) return
+      if (!msg || typeof msg !== 'object' || !('requestId' in msg)) return
+      if (msg.requestId !== requestId) return
 
       if (msg.type === 'progress') {
-        options.onProgress?.((msg as ParseWorkerProgressMessage).progress)
+        try {
+          options.onProgress?.((msg as ParseWorkerProgressMessage).progress)
+        } catch (err) {
+          fail(err instanceof Error ? err : new Error(String(err)))
+        }
         return
       }
       if (msg.type === 'result') {
@@ -96,7 +101,14 @@ export function parseExportInWorker(
       if (msg.type === 'error') {
         const errMsg = msg as ParseWorkerErrorMessage
         fail(new ParseWorkerClientError(errMsg.error.code, errMsg.error.message))
+        return
       }
+      fail(
+        new ParseWorkerClientError(
+          'UNSUPPORTED_INPUT',
+          `Unexpected worker message type: ${String((msg as { type?: unknown }).type)}`,
+        ),
+      )
     }
 
     const onError = (event: ErrorEvent) => {
