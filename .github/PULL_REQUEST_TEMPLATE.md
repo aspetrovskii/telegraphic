@@ -23,7 +23,6 @@
 ## Quality gate
 
 - [ ] CI green (typecheck, lint, unit, build, e2e)
-- [ ] Bugbot findings addressed
 - [ ] Vercel preview smoke-tested (or manual dashboard steps documented if secrets/project missing)
 - [ ] No out-of-phase product features
 
