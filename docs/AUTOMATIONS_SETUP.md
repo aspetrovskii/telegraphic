@@ -125,20 +125,33 @@ Read docs/DEVELOPMENT_PLAN.md § Parallelization map and docs/AUTOMATIONS_SETUP.
 4. For each issue with phase-ready and NOT phase-in-progress:
    - Comment on the issue with: "Dispatching phase-builder" and the standing phase prompt from DEVELOPMENT_PLAN § Standing prompts (fill phase number, goal, acceptance checklist).
    - Add label phase-in-progress; keep phase-ready until the PR opens, then remove phase-ready.
-   - Start work by opening a cloud-agent-style task ONLY via the configured follow-up mechanism:
-     preferred: ensure a sibling automation "phase-builder" is triggered by Issue comment / label;
-     if you can only comment, post a top-level issue comment that begins with:
-     `/phase-build Phase N` plus the full standing prompt so the phase-builder automation matches it.
+   - Handoff to the phase-builder (see “Wire the builder trigger” below) by:
+     (1) posting a top-level issue comment that begins with `/phase-build Phase N`
+         plus the full standing prompt so the phase-builder automation matches it; and
+     (2) ensuring label phase-in-progress is present (already added above).
+     Do not implement the phase yourself.
 5. Never dispatch two builders for the same phase. Never start Phase 4 before Phase 3 is merged, etc., except Phase 7 which may run parallel with 5/6.
 6. If nothing to do, exit without comments.
 ```
 
-**Wire builder trigger:** either
+### Wire the builder trigger (dispatcher → phase-builder handoff)
 
-- **A (recommended):** separate automation “phase-builder” on **Issue comment** matching `/phase-build`, or on **Issue label changed** → `phase-in-progress`, or  
-- **B:** webhook from dispatcher (advanced).
+The dispatcher must **not** implement the phase itself. It only marks an issue ready and fires a signal that a **separate** automation (`Telegraphic — phase builder`, Step 4) listens for. Cursor Automations cannot reliably nest “start another agent” from inside a run, so wire one of these handoffs:
 
-Until Automations can nest launches cleanly, **label + issue-comment** is the reliable handoff.
+| Option | How the builder starts | When to use |
+| --- | --- | --- |
+| **A — Issue comment (recommended)** | Dispatcher posts a top-level issue comment whose body **starts with** `/phase-build`. The phase-builder automation trigger is GitHub → **Issue comment** with that filter. | Default. Easy to test by hand (`/phase-build Phase 3` on the issue). |
+| **A′ — Label change** | Dispatcher adds `phase-in-progress`. The phase-builder trigger is GitHub → **Issue label changed** → `phase-in-progress` added. | Use alone or together with A if comment filters are flaky. |
+| **B — Webhook (advanced)** | Dispatcher (or a tiny GitHub Action) POSTs to a Cursor Automations webhook that starts the phase-builder. | Only if you need a custom payload or non-GitHub kickoff. Rotate keys; prefer Team Owned automations. |
+
+**Recommended wiring (A + A′):**
+
+1. Create the phase-builder automation (Step 4) **before** enabling the dispatcher, with **both** triggers above (comment `/phase-build` **and** label `phase-in-progress`).
+2. Enable the automation and point it at this repository.
+3. Smoke-test without the dispatcher: on the Phase 3 tracking issue, post a comment that begins with `/phase-build Phase 3` (standing prompt optional for the test). Confirm a cloud agent run starts and opens a draft PR.
+4. Only then enable the dispatcher. Its job is to post that same `/phase-build …` comment (and set `phase-in-progress`) when deps are on `main`.
+
+Until nested launches work cleanly, **issue comment + label** is the reliable handoff. Do not rely on the dispatcher “somehow” coding the phase.
 
 ---
 
@@ -146,9 +159,9 @@ Until Automations can nest launches cleanly, **label + issue-comment** is the re
 
 **Name:** `Telegraphic — phase builder`
 
-**Triggers:**
+**Triggers (configure both; see “Wire the builder trigger” above):**
 
-- GitHub → **Issue comment** (filter: body starts with `/phase-build`), **or**
+- GitHub → **Issue comment** (filter: body starts with `/phase-build`)
 - GitHub → **Issue label changed** → label `phase-in-progress` added
 
 **Repository:** this repo. Model: pick your strongest available coding model.
@@ -266,6 +279,7 @@ Human involvement after setup: only design approval (if you require Stitch sign-
 - [ ] Repository auto-merge enabled; squash default
 - [ ] Labels created; phase issues 3–8 exist
 - [ ] Four automations enabled: dispatcher, builder, babysit, review/smoke
+- [ ] Builder trigger wired: `/phase-build` comment and/or `phase-in-progress` label starts phase-builder (tested on Phase 3 before enabling dispatcher)
 - [ ] Test: label or `/phase-build` on Phase 3 creates a PR without a manual agent
 - [ ] Test: failing CI on that PR gets a fix push from babysit
 - [ ] Test: green + approve → PR merges without a human Merge click
