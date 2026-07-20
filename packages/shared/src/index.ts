@@ -1,5 +1,5 @@
 /**
- * @telegraphic/shared — types, Telegram export parser, (later) bar-race engine.
+ * @telegraphic/shared — types, Telegram export parser, and deterministic canvas bar-race engine.
  * Pure functions only in the public API; no DOM / React.
  */
 
@@ -78,3 +78,35 @@ export {
   parseTelegramExportBytes,
   looksLikeZip,
 } from './parser/index.js'
+
+export {
+  render,
+  computeFrameLayout,
+  drawFrame,
+  computeProjectDuration,
+  playbackPositionAt,
+  resolvePlaybackTicks,
+  rankRecords,
+  takeTopN,
+  niceCeiling,
+  axisCeilingForValues,
+  lerpAxisCeiling,
+  lerp,
+  clamp01,
+  smoothstep,
+  formatTimerDate,
+  formatValue,
+  colorForRecordId,
+  countAtTick,
+} from './engine/index.js'
+
+export type {
+  EngineCanvasContext,
+  FrameLayout,
+  BarLayout,
+  ProjectDuration,
+  PlaybackPosition,
+  RankedEntry,
+} from './engine/index.js'
+
+export { createEngineFixtureProject } from './fixtures/engineProject.js'

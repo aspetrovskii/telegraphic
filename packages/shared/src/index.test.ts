@@ -3,19 +3,23 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import {
+  PACKAGE_NAME,
   ParseError,
   alignCountsToTicks,
   createDefaultTheme,
   createDefaultTotalSettings,
+  createEngineFixtureProject,
   createProject,
   createRecord,
   dayKeyFromTelegramDate,
   enumerateDays,
+  health,
   parseTelegramChatExport,
   parseTelegramChatExportJson,
   parseTelegramChatExportZip,
   parseTelegramExportBytes,
   parsedExportToRecord,
+  render,
   unionTicks,
 } from './index.js'
 
@@ -252,5 +256,18 @@ describe('ZIP parsing', () => {
   it('auto-detects raw JSON bytes', () => {
     const parsed = parseTelegramExportBytes(readFixtureBytes('valid-tiny', 'result.json'))
     expect(parsed.sourceChatTitle).toBe('Alice')
+  })
+})
+
+describe('shared package — engine', () => {
+  it('reports healthy', () => {
+    expect(health()).toEqual({ ok: true, package: PACKAGE_NAME })
+  })
+
+  it('exports render and fixture', () => {
+    expect(typeof render).toBe('function')
+    const project = createEngineFixtureProject()
+    expect(project.records.length).toBeGreaterThan(0)
+    expect(project.settings.screenSize.width).toBe(960)
   })
 })

@@ -82,3 +82,30 @@ body {
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
+
+.engine-fixture {
+  margin: 0;
+  padding: var(--space-md);
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.engine-fixture__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.engine-fixture__meta {
+  margin: 0 0 var(--space-md);
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.engine-fixture__canvas {
+  display: block;
+  width: 960px;
+  height: 540px;
+  max-width: 100%;
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--color-muted) 25%, transparent);
+}
