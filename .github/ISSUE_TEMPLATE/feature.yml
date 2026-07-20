@@ -7,6 +7,7 @@ body:
     attributes:
       value: |
         Prefer aligning with `docs/PRD.md` and the current phase in `docs/DEVELOPMENT_PLAN.md`.
+        Phase delivery is orchestrated via Automations — see `docs/AUTOMATIONS_SETUP.md`.
   - type: textarea
     id: problem
     attributes:

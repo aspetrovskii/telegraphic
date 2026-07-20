@@ -1,0 +1,55 @@
+name: Phase tracking
+description: Track one DEVELOPMENT_PLAN phase for the Automations dispatcher
+title: 'Phase N — '
+labels: ['automation']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use one issue per phase. The dispatcher automation marks `phase-ready` when dependencies are on `main`.
+        See `docs/DEVELOPMENT_PLAN.md` and `docs/AUTOMATIONS_SETUP.md`.
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options:
+        - Phase 3 — Editor shell
+        - Phase 4 — Total & Data panels
+        - Phase 5 — Design panels
+        - Phase 6 — Player polish & MP4 export
+        - Phase 7 — Backend, auth & home page
+        - Phase 8 — Sharing, public page & release polish
+    validations:
+      required: true
+  - type: textarea
+    id: depends
+    attributes:
+      label: Depends on (must be merged to main)
+      description: e.g. Phase 3; or Phase 6 AND Phase 7
+      placeholder: Phase 2
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance checklist
+      description: Copy verbatim from docs/DEVELOPMENT_PLAN.md for this phase
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: status_label
+    attributes:
+      label: Initial automation status
+      description: Use phase-ready only if all dependencies are already on main
+      options:
+        - phase-blocked
+        - phase-ready
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Stitch screens, known risks, links to prior PRs

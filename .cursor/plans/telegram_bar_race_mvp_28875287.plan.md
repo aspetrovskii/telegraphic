@@ -4,13 +4,13 @@ overview: "Браузерное приложение для создания в�
 todos:
   - id: phase-0-setup
     content: "Phase 0: репозиторий, monorepo-скелет, tooling, CI, AGENTS.md, rules, Vercel"
-    status: pending
+    status: completed
   - id: phase-1-parser
     content: "Phase 1: парсер Telegram export (1 экспорт = 1 запись) + Web Worker + fixtures + unit-тесты"
-    status: pending
+    status: completed
   - id: phase-2-engine
     content: "Phase 2: детерминированный Canvas bar-race движок (render(t)) + визуальные тесты"
-    status: pending
+    status: completed
   - id: phase-3-editor-shell
     content: "Phase 3: оболочка редактора — бесконечная плоскость, панели, топ-бар (дизайн из Stitch)"
     status: pending
@@ -40,7 +40,8 @@ isProject: true
 
 - `docs/PRD.md` — полная продуктовая спецификация (страницы, панели, кастомизация)
 - `docs/STITCH_DESIGN_GUIDE.md` — задание для дизайн-агента в Google Stitch
-- `docs/DEVELOPMENT_PLAN.md` — пошаговый план автономной разработки и тестирования
+- `docs/DEVELOPMENT_PLAN.md` — фазы, DAG, quality gate, роли Automations
+- `docs/AUTOMATIONS_SETUP.md` — настройка цепочки dispatcher → builder → babysit → review + auto-merge
 
 ## Решения (зафиксировано, обновлено 16.07.2026)
 

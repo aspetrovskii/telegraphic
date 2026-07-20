@@ -9,8 +9,16 @@ Browser app that turns Telegram Desktop chat exports into customizable bar-chart
 Read before coding:
 
 - `docs/PRD.md` — product spec (pages, panels, every customization option)
-- `docs/DEVELOPMENT_PLAN.md` — phases, quality gate, your phase's acceptance checklist
+- `docs/DEVELOPMENT_PLAN.md` — phases, quality gate, your phase's acceptance checklist, automation roles
+- `docs/AUTOMATIONS_SETUP.md` — event-driven phase chain (dispatcher, builder, babysit, review/smoke, auto-merge)
 - `docs/STITCH_DESIGN_GUIDE.md` — Stitch is the primary design authority (tokens, direction, IA); screen names listed there. Adapt layouts — do not pixel-copy individual Stitch screens
+
+## Development process
+
+- **One phase = one agent run = one PR.** Do not implement later phases in the same run.
+- Phases are normally started by **Cursor Automations** (not a manual “New agent” click). Follow the tracking issue / `/phase-build` prompt for your phase number only.
+- After opening a phase PR: fill the PR template, attach checklist evidence, and **enable GitHub auto-merge** (squash). Do not bypass branch protection; do not merge from the agent unless auto-merge is unavailable and the run instructions explicitly require it.
+- Stay inside your role if you are a dispatcher, babysit, or review/smoke automation (see `docs/AUTOMATIONS_SETUP.md`).
 
 ## Stack & layout
 
@@ -35,7 +43,7 @@ State: Zustand. Tests: Vitest (unit), Playwright (e2e + visual snapshots). Deplo
 
 ## Definition of done for any PR
 
-CI green (typecheck, lint, unit, build, e2e), Vercel preview smoke-tested against the phase acceptance checklist, PR description includes the checklist and screenshots.
+CI green (typecheck, lint, unit, build, e2e), Vercel preview smoke-tested against the phase acceptance checklist, PR description includes the checklist and screenshots, auto-merge enabled when the repo allows it.
 
 ## Cursor Cloud specific instructions
 
