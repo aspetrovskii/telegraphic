@@ -1,10 +1,9 @@
 import { expect, test } from '@playwright/test'
 
-test('scaffold health page loads and shows shared status', async ({ page }) => {
+test('sign-in page is the unauthenticated entry', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Telegraphic' })).toBeVisible()
-  await expect(page.getByTestId('shared-status')).toHaveText('ok')
-  await expect(page.getByTestId('api-status')).toHaveText('ok')
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
+  await expect(page.getByTestId('signin-email')).toBeVisible()
 })
 
 test('api health endpoint responds', async ({ request }) => {

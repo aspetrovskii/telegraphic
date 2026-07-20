@@ -22,6 +22,8 @@ export default defineConfig({
       env: {
         ...process.env,
         PORT: String(apiPort),
+        DATABASE_URL: 'file::memory:',
+        NODE_ENV: 'test',
       },
     },
     {

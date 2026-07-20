@@ -19,6 +19,11 @@ blob-report
 .env.*
 !.env.example
 
+# Local SQLite (API)
+apps/api/data/
+*.db
+*.db-journal
+
 # Vercel / IDE
 .vercel
 .DS_Store

@@ -1,4 +1,12 @@
 import { handle } from 'hono/vercel'
-import { app } from './app.js'
+import { getApp } from './app.js'
 
-export default handle(app)
+const appPromise = getApp()
+
+/**
+ * Vercel serverless entry. Awaits DB migrate on cold start, then delegates to Hono.
+ */
+export default async function vercelHandler(request: Request): Promise<Response> {
+  const app = await appPromise
+  return handle(app)(request)
+}
