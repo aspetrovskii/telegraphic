@@ -1,5 +1,5 @@
 import { createRecord, type CreateRecordInput, type Record } from '../types/record.js'
-import { enumerateDays } from '../ticks.js'
+import { enumerateDays, isIsoDate } from '../ticks.js'
 import { ParseError } from './errors.js'
 import type { TelegramMessage } from './schema.js'
 
@@ -31,7 +31,7 @@ export type ProgressCallback = (progress: ParseProgress) => void
 export function dayKeyFromTelegramDate(date: string): string | null {
   if (date.length < 10) return null
   const key = date.slice(0, 10)
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return null
+  if (!isIsoDate(key)) return null
   return key
 }
 
