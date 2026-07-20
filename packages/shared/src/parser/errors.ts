@@ -17,4 +17,5 @@ export type ParseErrorCode =
   | 'INVALID_MESSAGE_DATE'
   | 'ZIP_NO_RESULT_JSON'
   | 'ZIP_INVALID'
+  | 'ZIP_TOO_LARGE'
   | 'UNSUPPORTED_INPUT'

@@ -3,8 +3,26 @@ import { ParseError } from './errors.js'
 import type { ParsedChatExport, ProgressCallback } from './aggregate.js'
 import { parseTelegramChatExportJson } from './parseJson.js'
 
+/** Matches Phase 1 acceptance for large JSON parses; caps zip-bomb expansion. */
+const MAX_ZIP_ENTRY_UNCOMPRESSED_BYTES = 50 * 1024 * 1024
+/** Central-directory walk cap; media-heavy Telegram exports stay well below this. */
+const MAX_ZIP_ENTRIES = 100_000
+
+function normalizeZipPath(path: string): string {
+  return path.replace(/\\/g, '/')
+}
+
+function isResultJsonPath(path: string): boolean {
+  const normalized = normalizeZipPath(path)
+  return (
+    normalized === 'result.json' ||
+    normalized.endsWith('/result.json') ||
+    normalized.toLowerCase().endsWith('result.json')
+  )
+}
+
 function findResultJsonPath(paths: string[]): string | null {
-  const normalized = paths.map((p) => p.replace(/\\/g, '/'))
+  const normalized = paths.map(normalizeZipPath)
   const exact = normalized.find((p) => p === 'result.json' || p.endsWith('/result.json'))
   if (exact) {
     return paths[normalized.indexOf(exact)] ?? exact
@@ -25,10 +43,40 @@ export function parseTelegramChatExportZip(
 ): ParsedChatExport {
   onProgress?.({ stage: 'extracting', ratio: 0 })
 
+  let entryCount = 0
+  let uncompressedTotal = 0
+
   let files: Record<string, Uint8Array>
   try {
-    files = unzipSync(bytes)
+    files = unzipSync(bytes, {
+      filter(file) {
+        entryCount += 1
+        if (entryCount > MAX_ZIP_ENTRIES) {
+          throw new ParseError('ZIP_TOO_LARGE', `ZIP has more than ${MAX_ZIP_ENTRIES} entries.`)
+        }
+        if (!isResultJsonPath(file.name)) {
+          return false
+        }
+        // fflate allocates from header sizes before inflate; reject early.
+        const claimed = Math.max(file.size, file.originalSize)
+        if (claimed > MAX_ZIP_ENTRY_UNCOMPRESSED_BYTES) {
+          throw new ParseError(
+            'ZIP_TOO_LARGE',
+            `result.json in ZIP exceeds the ${MAX_ZIP_ENTRY_UNCOMPRESSED_BYTES} byte size limit.`,
+          )
+        }
+        uncompressedTotal += claimed
+        if (uncompressedTotal > MAX_ZIP_ENTRY_UNCOMPRESSED_BYTES) {
+          throw new ParseError(
+            'ZIP_TOO_LARGE',
+            `Uncompressed ZIP contents exceed the ${MAX_ZIP_ENTRY_UNCOMPRESSED_BYTES} byte size limit.`,
+          )
+        }
+        return true
+      },
+    })
   } catch (err) {
+    if (err instanceof ParseError) throw err
     throw new ParseError('ZIP_INVALID', 'Could not read ZIP archive.', { cause: err })
   }
 
@@ -43,6 +91,13 @@ export function parseTelegramChatExportZip(
   const fileBytes = files[path]
   if (!fileBytes) {
     throw new ParseError('ZIP_NO_RESULT_JSON', `Missing entry ${path} in ZIP.`)
+  }
+
+  if (fileBytes.byteLength > MAX_ZIP_ENTRY_UNCOMPRESSED_BYTES) {
+    throw new ParseError(
+      'ZIP_TOO_LARGE',
+      `result.json in ZIP exceeds the ${MAX_ZIP_ENTRY_UNCOMPRESSED_BYTES} byte size limit.`,
+    )
   }
 
   onProgress?.({ stage: 'extracting', ratio: 1 })
