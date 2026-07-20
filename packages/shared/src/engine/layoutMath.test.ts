@@ -108,16 +108,28 @@ describe('duration + playback time', () => {
     expect(d.tickCount).toBe(12)
   })
 
-  it('daysPerSecond mode scales with tick span', () => {
+  it('daysPerSecond mode scales with calendar day span', () => {
     const project = createEngineFixtureProject()
     project.settings.speedMode = 'daysPerSecond'
     project.settings.speedValue = 2
     project.settings.startDelay = 0
     project.settings.finishDelay = 0
-    // 12 ticks → 11 steps; 11/2 = 5.5s
+    // Fixture ticks 2020-01-01 … 2020-12-01 → 335 calendar days; 335/2 = 167.5s
     const d = computeProjectDuration(project)
-    expect(d.animationSeconds).toBe(5.5)
-    expect(d.totalSeconds).toBe(5.5)
+    expect(d.animationSeconds).toBe(167.5)
+    expect(d.totalSeconds).toBe(167.5)
+  })
+
+  it('daysPerSecond uses calendar span under smoothing stride', () => {
+    const project = createEngineFixtureProject()
+    project.settings.speedMode = 'daysPerSecond'
+    project.settings.speedValue = 1
+    project.settings.smoothingInterval = 2
+    project.settings.startDelay = 0
+    project.settings.finishDelay = 0
+    const d = computeProjectDuration(project)
+    // Still Jan 1 → Dec 1 even when strided
+    expect(d.animationSeconds).toBe(335)
   })
 
   it('daysPerSecond with non-positive speed yields zero animation span', () => {
@@ -181,6 +193,9 @@ describe('format helpers', () => {
     )
     expect(formatValue(128000, { format: 'raw', decimals: 0, thousandsSeparator: true })).toBe(
       '128,000',
+    )
+    expect(formatValue(12.34, { format: 'raw', decimals: 1, thousandsSeparator: false })).toBe(
+      '12.3',
     )
   })
 

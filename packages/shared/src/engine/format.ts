@@ -70,10 +70,12 @@ export function formatValue(
     return trimTrailingZeros(v.toFixed(decimals))
   }
 
-  const rounded = Math.round(v)
-  const raw = String(rounded)
-  if (!opts.thousandsSeparator) return raw
-  return raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const decimals = Math.max(0, Math.floor(opts.decimals))
+  const text = decimals > 0 ? v.toFixed(decimals) : String(Math.round(v))
+  if (!opts.thousandsSeparator) return text
+  const [intPart, frac] = text.split('.') as [string, string | undefined]
+  const withSep = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return frac !== undefined ? `${withSep}.${frac}` : withSep
 }
 
 function trimTrailingZeros(s: string): string {

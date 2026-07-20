@@ -141,15 +141,16 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
 
     // PRD §3: linear interpolation of bar widths and Y positions (rank swaps).
     const rank = lerp(slotA, slotB, t)
-    const value = lerp(vA, vB, t)
+    const rawValue = lerp(vA, vB, t)
 
     let opacity = 1
     if (entering) opacity = t
     else if (exiting) opacity = 1 - t
 
     const y = padTop + rank * rowStride
-    const capped = Math.min(value, axisCeiling)
-    const widthPx = Math.max(0, (capped / axisCeiling) * trackWidth * scale)
+    // Cap display value to the axis so labels match bar length mid-shrink.
+    const value = Math.min(rawValue, axisCeiling)
+    const widthPx = Math.max(0, (value / axisCeiling) * trackWidth * scale)
 
     bars.push({
       recordId: id,
@@ -168,6 +169,8 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
   }
 
   // Unique 1-based labels from current values (avoids duplicate numbers mid-swap).
+  // Use uncapped ordering intent: after capping, relative order among visible bars is preserved
+  // when all were below the ceiling; ties broken by id.
   const labeled = bars
     .filter((b) => b.opacity > 0.001)
     .sort((a, b) => {
