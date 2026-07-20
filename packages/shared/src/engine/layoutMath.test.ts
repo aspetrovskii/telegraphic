@@ -164,6 +164,10 @@ describe('format helpers', () => {
     expect(
       formatValue(1_280_000, { format: 'compact', decimals: 1, thousandsSeparator: true }),
     ).toBe('1.3M')
+    expect(formatValue(42, { format: 'compact', decimals: 1, thousandsSeparator: true })).toBe('42')
+    expect(formatValue(42.67, { format: 'compact', decimals: 1, thousandsSeparator: true })).toBe(
+      '42.7',
+    )
     expect(formatValue(128000, { format: 'raw', decimals: 0, thousandsSeparator: true })).toBe(
       '128,000',
     )

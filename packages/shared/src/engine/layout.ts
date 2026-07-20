@@ -2,7 +2,7 @@ import type { Project } from '../types/project.js'
 import type { Record as ProjectRecord } from '../types/record.js'
 import { axisCeilingForValues, lerpAxisCeiling } from './axis.js'
 import { colorForRecordId } from './format.js'
-import { lerp, smoothstep } from './interpolate.js'
+import { lerp } from './interpolate.js'
 import { rankRecords, takeTopN } from './ranking.js'
 import { countAtTick, resolvePlaybackTicks, tickIndexInProject } from './ticksWindow.js'
 import { playbackPositionAt } from './time.js'
@@ -113,7 +113,6 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
   const axisCeiling = Math.max(1e-9, lerpAxisCeiling(ceilingA, ceilingB, t))
 
   const exitRank = topN // slot just below the visible list
-  const ease = smoothstep(t)
   const bars: BarLayout[] = []
 
   for (const id of ids) {
@@ -129,12 +128,13 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
 
     const entering = !inA && inB
     const exiting = inA && !inB
-    const rank = lerp(rA, rB, ease)
+    // PRD §3: linear interpolation of bar widths and Y positions (rank swaps).
+    const rank = lerp(rA, rB, t)
     const value = lerp(vA, vB, t)
 
     let opacity = 1
-    if (entering) opacity = ease
-    else if (exiting) opacity = 1 - ease
+    if (entering) opacity = t
+    else if (exiting) opacity = 1 - t
 
     const y = padTop + rank * rowStride
     const widthPx = Math.max(0, (value / axisCeiling) * trackWidth * scale)

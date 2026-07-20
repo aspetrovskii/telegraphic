@@ -66,7 +66,8 @@ export function formatValue(
     if (abs >= 1_000) {
       return trimTrailingZeros((v / 1_000).toFixed(decimals)) + 'k'
     }
-    return trimTrailingZeros(v.toFixed(Math.min(decimals, 0)))
+    // Below 1k: still honor `decimals` (message counts are usually whole numbers).
+    return trimTrailingZeros(v.toFixed(decimals))
   }
 
   const rounded = Math.round(v)

@@ -29,6 +29,9 @@ export function resolvePlaybackTicks(project: Project): string[] {
   if (lo > hi || lo >= ticks.length) return []
 
   const step = Math.max(1, Math.floor(settings.smoothingInterval))
+  // Aggregate granularity: keep every k-th day (and always the clipped end).
+  // For cumulative series, the count at a kept tick is already the window-end
+  // aggregate — no separate rolling sum is required.
   const out: string[] = []
   for (let i = lo; i <= hi; i += step) {
     out.push(ticks[i]!)
