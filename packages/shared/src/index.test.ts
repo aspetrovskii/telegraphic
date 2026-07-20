@@ -258,3 +258,16 @@ describe('ZIP parsing', () => {
     expect(parsed.sourceChatTitle).toBe('Alice')
   })
 })
+
+describe('shared package — engine', () => {
+  it('reports healthy', () => {
+    expect(health()).toEqual({ ok: true, package: PACKAGE_NAME })
+  })
+
+  it('exports render and fixture', () => {
+    expect(typeof render).toBe('function')
+    const project = createEngineFixtureProject()
+    expect(project.records.length).toBeGreaterThan(0)
+    expect(project.settings.screenSize.width).toBe(960)
+  })
+})
