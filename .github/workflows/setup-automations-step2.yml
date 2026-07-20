@@ -1,0 +1,22 @@
+name: Setup Automations Step 2
+
+# One-shot: create phase labels + ensure tracking issues (docs/AUTOMATIONS_SETUP.md Step 2).
+# Uses GITHUB_TOKEN with issues:write so labels can be created (Cursor App cannot).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Step 2 setup script
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: bash scripts/setup-automations-step2.sh

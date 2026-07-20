@@ -83,6 +83,17 @@ Mark Phase 3 and Phase 7 with `phase-ready` first (both unblocked after Phases 0
 
 Use issue template [`.github/ISSUE_TEMPLATE/phase.yml`](../.github/ISSUE_TEMPLATE/phase.yml) when available.
 
+### One-shot script / workflow
+
+If labels cannot be created from the cloud agent (Cursor GitHub App lacks label write), finish Step 2 with either:
+
+```bash
+# as a repo owner / triage+ identity
+./scripts/setup-automations-step2.sh
+```
+
+or **Actions → Setup Automations Step 2 → Run workflow** (`.github/workflows/setup-automations-step2.yml`). The script is idempotent: creates missing labels, upserts phase issues 3–8, applies status labels, and closes permission-probe issues.
+
 ---
 
 ## Step 3 — Automation: Phase dispatcher
