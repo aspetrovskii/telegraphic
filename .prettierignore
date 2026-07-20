@@ -1,6 +1,6 @@
 pnpm-lock.yaml
 dist
-api/[[...route]].js
+api/*.js
 api/package.json
 coverage
 playwright-report

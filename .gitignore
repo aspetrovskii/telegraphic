@@ -4,7 +4,7 @@ node_modules
 
 # Builds
 dist
-api/[[...route]].js
+api/*.js
 api/package.json
 *.tsbuildinfo
 
