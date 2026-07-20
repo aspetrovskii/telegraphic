@@ -28,8 +28,7 @@ export function TotalPanel() {
   const resolvedStart = settings.datesInterval.start ?? dateBounds.start ?? ''
   const resolvedEnd = settings.datesInterval.end ?? dateBounds.end ?? ''
   const showCustomSize =
-    settings.screenSize.preset === 'custom' ||
-    !(settings.screenSize.preset in SCREEN_SIZE_PRESETS)
+    settings.screenSize.preset === 'custom' || !(settings.screenSize.preset in SCREEN_SIZE_PRESETS)
 
   return (
     <div className="total-panel" data-testid="total-panel">
