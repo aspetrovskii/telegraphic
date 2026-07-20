@@ -49,6 +49,18 @@ export function formatTimerDate(isoDate: string, format: TimerFormat): string {
 }
 
 /**
+ * Second-line clock for the timer when `showTime` is on and smoothing &lt; 1 day.
+ * `dayFraction` in [0, 1) maps to HH:MM (deterministic; no wall clock).
+ */
+export function formatTimerClock(dayFraction: number): string {
+  const clamped = Number.isFinite(dayFraction) ? Math.min(Math.max(dayFraction, 0), 0.999999) : 0
+  const totalMinutes = Math.floor(clamped * 24 * 60)
+  const hh = String(Math.floor(totalMinutes / 60)).padStart(2, '0')
+  const mm = String(totalMinutes % 60).padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+/**
  * Format a bar value label.
  * `compact`: 1280 → 1.3k, 1_280_000 → 1.3M (decimals from theme).
  */

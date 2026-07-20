@@ -1,5 +1,11 @@
 import { useLayoutEffect, useMemo, useRef } from 'react'
-import { computeProjectDuration, createEngineFixtureProject, render } from '@telegraphic/shared'
+import {
+  computeProjectDuration,
+  createEngineFixtureProject,
+  render,
+  type Project,
+  type Theme,
+} from '@telegraphic/shared'
 
 type Props = {
   /** Explicit tSec; when omitted, read from `?t=` (default 0). */
@@ -7,12 +13,13 @@ type Props = {
 }
 
 /**
- * Minimal host page for Phase 2 visual snapshots.
+ * Minimal host page for Phase 2/5 visual snapshots.
  * Renders the shared engine once into a canvas sized to the fixture screen.
+ * Optional `?theme=` JSON patch deep-merges into the fixture theme (Phase 5 matrix).
  */
 export function EngineFixturePage({ tSec }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const project = useMemo(() => createEngineFixtureProject(), [])
+  const project = useMemo(() => buildFixtureProject(), [])
   const duration = useMemo(() => computeProjectDuration(project), [project])
 
   const resolvedT = useMemo(() => {
@@ -53,4 +60,50 @@ export function EngineFixturePage({ tSec }: Props) {
       />
     </main>
   )
+}
+
+function buildFixtureProject(): Project {
+  const base = createEngineFixtureProject()
+  const params = new URLSearchParams(window.location.search)
+  const themeRaw = params.get('theme')
+  if (!themeRaw) return base
+  try {
+    const patch = JSON.parse(themeRaw) as DeepPartialTheme
+    return { ...base, theme: mergeTheme(base.theme, patch) }
+  } catch {
+    return base
+  }
+}
+
+type DeepPartialTheme = {
+  background?: {
+    valueFrontiers?: Theme['background']['valueFrontiers']
+    filling?: Partial<Theme['background']['filling']>
+    timer?: Partial<Theme['background']['timer']>
+  }
+  card?: Partial<Omit<Theme['card'], 'valueLabel' | 'nameLabel' | 'avatar' | 'typography'>> & {
+    valueLabel?: Partial<Theme['card']['valueLabel']>
+    nameLabel?: Partial<Theme['card']['nameLabel']>
+    avatar?: Partial<Theme['card']['avatar']>
+    typography?: Partial<Theme['card']['typography']>
+  }
+}
+
+function mergeTheme(base: Theme, patch: DeepPartialTheme): Theme {
+  return {
+    background: {
+      valueFrontiers: patch.background?.valueFrontiers ?? base.background.valueFrontiers,
+      filling: { ...base.background.filling, ...patch.background?.filling },
+      timer: { ...base.background.timer, ...patch.background?.timer },
+    },
+    card: {
+      ...base.card,
+      ...patch.card,
+      valueLabel: { ...base.card.valueLabel, ...patch.card?.valueLabel },
+      nameLabel: { ...base.card.nameLabel, ...patch.card?.nameLabel },
+      avatar: { ...base.card.avatar, ...patch.card?.avatar },
+      typography: { ...base.card.typography, ...patch.card?.typography },
+      palette: patch.card?.palette ?? base.card.palette,
+    },
+  }
 }

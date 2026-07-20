@@ -2,6 +2,7 @@ import { useEditorStore } from './useEditorStore'
 import type { LeftPanelId, RightPanelId } from './editorStore'
 import { TotalPanel } from './TotalPanel'
 import { DataPanel } from './DataPanel'
+import { DesignPanel } from './DesignPanel'
 
 const LEFT_TITLES: Record<LeftPanelId, string> = {
   total: 'Total',
@@ -48,8 +49,8 @@ export function RightEditorPanel() {
       <header className="editor-panel__header">
         <h2 className="editor-panel__title">Design</h2>
       </header>
-      <div className="editor-panel__body">
-        <p className="editor-panel__placeholder">Controls coming in a later phase.</p>
+      <div className="editor-panel__body editor-panel__body--scroll">
+        <DesignPanel />
       </div>
     </aside>
   )

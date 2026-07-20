@@ -10,6 +10,8 @@ export type Record = {
   sourceChatTitle: string
   /** Per-card bar color override. */
   color?: string
+  /** Per-card name label color override. */
+  nameColor?: string
   /** Client-resized avatar data URL (~128px). */
   avatarDataUrl?: string
   visible: boolean
@@ -23,6 +25,7 @@ export type CreateRecordInput = {
   sourceChatTitle: string
   counts: number[]
   color?: string
+  nameColor?: string
   avatarDataUrl?: string
   visible?: boolean
 }
@@ -37,6 +40,9 @@ export function createRecord(input: CreateRecordInput): Record {
   }
   if (input.color !== undefined) {
     record.color = input.color
+  }
+  if (input.nameColor !== undefined) {
+    record.nameColor = input.nameColor
   }
   if (input.avatarDataUrl !== undefined) {
     record.avatarDataUrl = input.avatarDataUrl

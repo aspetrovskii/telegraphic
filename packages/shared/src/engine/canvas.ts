@@ -41,6 +41,10 @@ export type EngineCanvasContext = {
   font: string
   textAlign: string
   textBaseline: string
+  /** CSS letter-spacing; optional for stub contexts. */
+  letterSpacing?: string
+  /** CSS filter (e.g. blur); optional for stub contexts. */
+  filter?: string
   shadowColor: string
   shadowBlur: number
   shadowOffsetX: number

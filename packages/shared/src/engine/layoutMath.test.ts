@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { niceCeiling, axisCeilingForValues, lerpAxisCeiling } from './axis.js'
 import { computeProjectDuration } from './duration.js'
-import { formatTimerDate, formatValue, colorForRecordId, initialsFromTitle } from './format.js'
+import {
+  formatTimerClock,
+  formatTimerDate,
+  formatValue,
+  colorForRecordId,
+  initialsFromTitle,
+} from './format.js'
 import { lerp, clamp01, smoothstep } from './interpolate.js'
 import { computeFrameLayout } from './layout.js'
 import { rankRecords, takeTopN } from './ranking.js'
@@ -178,6 +184,14 @@ describe('format helpers', () => {
     expect(formatTimerDate('2020-06-15', 'MMM YYYY')).toBe('Jun 2020')
     expect(formatTimerDate('2020-06-15', 'DD/MM/YY')).toBe('15/06/20')
     expect(formatTimerDate('2020-06-15', 'Q# YYYY')).toBe('Q2 2020')
+    expect(formatTimerDate('2020-06-15', 'YYYY')).toBe('2020')
+    expect(formatTimerDate('2020-06-15', 'DD MMM YYYY')).toBe('15 Jun 2020')
+  })
+
+  it('formats timer clock from day fraction', () => {
+    expect(formatTimerClock(0)).toBe('00:00')
+    expect(formatTimerClock(0.5)).toBe('12:00')
+    expect(formatTimerClock(0.999)).toBe('23:58')
   })
 
   it('formats values', () => {
@@ -227,6 +241,19 @@ describe('frame layout', () => {
     expect(a).toEqual(b)
     expect(a.bars.length).toBeGreaterThan(0)
     expect(a.axisCeiling).toBeGreaterThan(0)
+  })
+
+  it('exposes timer transition endpoints when month labels change', () => {
+    const project = createEngineFixtureProject()
+    // Midway through the animated race → between two monthly ticks with different labels.
+    const { animationSeconds } = computeProjectDuration(project)
+    const tSec = project.settings.startDelay + animationSeconds / 2
+    const layout = computeFrameLayout(project, tSec)
+    expect(layout.timerDateFrom).toBeTruthy()
+    expect(layout.timerDateTo).toBeTruthy()
+    expect(layout.timerDateFrom).not.toBe(layout.timerDateTo)
+    expect(layout.timerTransition).toBeGreaterThan(0)
+    expect(layout.timerTransition).toBeLessThan(1)
   })
 
   it('end frame uses final tick', () => {

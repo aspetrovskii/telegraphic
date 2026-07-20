@@ -5,7 +5,13 @@ export { resolvePlaybackTicks, tickIndexInProject, countAtTick } from './ticksWi
 export { rankRecords, takeTopN, valuesAtProjectTick, type RankedEntry } from './ranking.js'
 export { niceCeiling, axisCeilingForValues, lerpAxisCeiling } from './axis.js'
 export { playbackPositionAt, type PlaybackPosition } from './time.js'
-export { formatTimerDate, formatValue, colorForRecordId, initialsFromTitle } from './format.js'
+export {
+  formatTimerDate,
+  formatTimerClock,
+  formatValue,
+  colorForRecordId,
+  initialsFromTitle,
+} from './format.js'
 export { computeFrameLayout, type FrameLayout, type BarLayout } from './layout.js'
 export { drawFrame } from './draw.js'
 export { render } from './render.js'

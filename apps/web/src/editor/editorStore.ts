@@ -7,11 +7,21 @@ import {
   type ParsedChatExport,
   type Project,
   type ScreenSizePreset,
+  type Theme,
+  type ThemeAvatar,
+  type ThemeBackground,
+  type ThemeCard,
+  type ThemeCardTypography,
+  type ThemeFilling,
+  type ThemeNameLabel,
+  type ThemeTimer,
+  type ThemeValueLabel,
   type TotalSettings,
 } from '@telegraphic/shared'
 
 export type LeftPanelId = 'total' | 'data' | 'share'
 export type RightPanelId = 'design'
+export type DesignElementId = 'background' | 'card'
 
 export type CanvasView = {
   panX: number
@@ -33,6 +43,9 @@ type EditorState = {
   playing: boolean
   leftPanel: LeftPanelId | null
   rightPanel: RightPanelId | null
+  designElement: DesignElementId
+  /** Record selected for per-card Design overrides (null = none). */
+  selectedRecordId: string | null
   ratingSelected: boolean
   canvas: CanvasView
   /** Latest measured viewport size for fit calculations. */
@@ -46,6 +59,8 @@ type EditorState = {
   togglePlay: () => void
   toggleLeftPanel: (id: LeftPanelId) => void
   toggleRightPanel: (id: RightPanelId) => void
+  setDesignElement: (id: DesignElementId) => void
+  setSelectedRecordId: (id: string | null) => void
   setRatingSelected: (selected: boolean) => void
   setCanvas: (partial: Partial<CanvasView>) => void
   setViewport: (width: number, height: number) => void
@@ -55,11 +70,22 @@ type EditorState = {
   updateSettings: (partial: Partial<TotalSettings>) => void
   setScreenSizePreset: (preset: ScreenSizePreset) => void
   setCustomScreenSize: (width: number, height: number) => void
+  updateTheme: (partial: Partial<Theme>) => void
+  updateBackground: (partial: Partial<ThemeBackground>) => void
+  updateFilling: (partial: Partial<ThemeFilling>) => void
+  updateTimer: (partial: Partial<ThemeTimer>) => void
+  updateCard: (partial: Partial<ThemeCard>) => void
+  updateValueLabel: (partial: Partial<ThemeValueLabel>) => void
+  updateNameLabel: (partial: Partial<ThemeNameLabel>) => void
+  updateAvatarTheme: (partial: Partial<ThemeAvatar>) => void
+  updateCardTypography: (partial: Partial<ThemeCardTypography>) => void
   setRecordSearch: (query: string) => void
   renameRecord: (id: string, title: string) => void
   deleteRecord: (id: string) => void
   setRecordVisible: (id: string, visible: boolean) => void
   setRecordAvatar: (id: string, avatarDataUrl: string | undefined) => void
+  setRecordColor: (id: string, color: string | undefined) => void
+  setRecordNameColor: (id: string, nameColor: string | undefined) => void
   addParsedRecord: (parsed: ParsedChatExport, options?: { id?: string; title?: string }) => string
   openImportModal: () => void
   closeImportModal: () => void
@@ -104,12 +130,16 @@ export function createEditorStore(projectId: string) {
   const project = loadProject(projectId)
   const initialViewport = { width: 1200, height: 700 }
 
+  const firstVisible = project.records.find((r) => r.visible)?.id ?? project.records[0]?.id ?? null
+
   return create<EditorState>((set, get) => ({
     project,
     tSec: 0,
     playing: false,
     leftPanel: null,
     rightPanel: null,
+    designElement: 'background',
+    selectedRecordId: firstVisible,
     ratingSelected: true,
     canvas: computeFit(project, initialViewport),
     viewport: initialViewport,
@@ -120,6 +150,10 @@ export function createEditorStore(projectId: string) {
       set((s) => ({
         project: next,
         tSec: clampTSec(next, s.tSec),
+        selectedRecordId:
+          s.selectedRecordId && next.records.some((r) => r.id === s.selectedRecordId)
+            ? s.selectedRecordId
+            : (next.records.find((r) => r.visible)?.id ?? next.records[0]?.id ?? null),
       })),
     setTSec: (tSec) => {
       const total = get().durationSeconds()
@@ -135,6 +169,13 @@ export function createEditorStore(projectId: string) {
       set((s) => ({
         rightPanel: s.rightPanel === id ? null : id,
       })),
+    setDesignElement: (id) => set({ designElement: id, rightPanel: 'design' }),
+    setSelectedRecordId: (id) =>
+      set({
+        selectedRecordId: id,
+        designElement: id ? 'card' : get().designElement,
+        rightPanel: 'design',
+      }),
     setRatingSelected: (selected) => set({ ratingSelected: selected }),
     setCanvas: (partial) => set((s) => ({ canvas: { ...s.canvas, ...partial } })),
     setViewport: (width, height) => set({ viewport: { width, height } }),
@@ -188,6 +229,85 @@ export function createEditorStore(projectId: string) {
       })
     },
 
+    updateTheme: (partial) => {
+      const { project: prev } = get()
+      const nextTheme: Theme = { ...prev.theme, ...partial }
+      if (partial.background) {
+        nextTheme.background = {
+          ...prev.theme.background,
+          ...partial.background,
+          filling: partial.background.filling
+            ? { ...prev.theme.background.filling, ...partial.background.filling }
+            : prev.theme.background.filling,
+          timer: partial.background.timer
+            ? { ...prev.theme.background.timer, ...partial.background.timer }
+            : prev.theme.background.timer,
+        }
+      }
+      if (partial.card) {
+        nextTheme.card = {
+          ...prev.theme.card,
+          ...partial.card,
+          valueLabel: partial.card.valueLabel
+            ? { ...prev.theme.card.valueLabel, ...partial.card.valueLabel }
+            : prev.theme.card.valueLabel,
+          nameLabel: partial.card.nameLabel
+            ? { ...prev.theme.card.nameLabel, ...partial.card.nameLabel }
+            : prev.theme.card.nameLabel,
+          avatar: partial.card.avatar
+            ? { ...prev.theme.card.avatar, ...partial.card.avatar }
+            : prev.theme.card.avatar,
+          typography: partial.card.typography
+            ? { ...prev.theme.card.typography, ...partial.card.typography }
+            : prev.theme.card.typography,
+          palette: partial.card.palette ?? prev.theme.card.palette,
+        }
+      }
+      set({ project: { ...prev, theme: nextTheme } })
+    },
+
+    updateBackground: (partial) => {
+      get().updateTheme({ background: { ...get().project.theme.background, ...partial } })
+    },
+
+    updateFilling: (partial) => {
+      const filling = { ...get().project.theme.background.filling, ...partial }
+      get().updateBackground({ filling })
+    },
+
+    updateTimer: (partial) => {
+      const timer = { ...get().project.theme.background.timer, ...partial }
+      get().updateBackground({ timer })
+    },
+
+    updateCard: (partial) => {
+      get().updateTheme({ card: { ...get().project.theme.card, ...partial } })
+    },
+
+    updateValueLabel: (partial) => {
+      get().updateCard({
+        valueLabel: { ...get().project.theme.card.valueLabel, ...partial },
+      })
+    },
+
+    updateNameLabel: (partial) => {
+      get().updateCard({
+        nameLabel: { ...get().project.theme.card.nameLabel, ...partial },
+      })
+    },
+
+    updateAvatarTheme: (partial) => {
+      get().updateCard({
+        avatar: { ...get().project.theme.card.avatar, ...partial },
+      })
+    },
+
+    updateCardTypography: (partial) => {
+      get().updateCard({
+        typography: { ...get().project.theme.card.typography, ...partial },
+      })
+    },
+
     setRecordSearch: (query) => set({ recordSearch: query }),
 
     renameRecord: (id, title) => {
@@ -202,16 +322,18 @@ export function createEditorStore(projectId: string) {
     },
 
     deleteRecord: (id) => {
-      set((s) => ({
-        project: {
-          ...s.project,
-          records: s.project.records.filter((r) => r.id !== id),
-        },
-        tSec: clampTSec(
-          { ...s.project, records: s.project.records.filter((r) => r.id !== id) },
-          s.tSec,
-        ),
-      }))
+      set((s) => {
+        const records = s.project.records.filter((r) => r.id !== id)
+        const nextProject = { ...s.project, records }
+        return {
+          project: nextProject,
+          tSec: clampTSec(nextProject, s.tSec),
+          selectedRecordId:
+            s.selectedRecordId === id
+              ? (records.find((r) => r.visible)?.id ?? records[0]?.id ?? null)
+              : s.selectedRecordId,
+        }
+      })
     },
 
     setRecordVisible: (id, visible) => {
@@ -235,6 +357,36 @@ export function createEditorStore(projectId: string) {
             } else {
               next.avatarDataUrl = avatarDataUrl
             }
+            return next
+          }),
+        },
+      }))
+    },
+
+    setRecordColor: (id, color) => {
+      set((s) => ({
+        project: {
+          ...s.project,
+          records: s.project.records.map((r) => {
+            if (r.id !== id) return r
+            const next = { ...r }
+            if (color === undefined) delete next.color
+            else next.color = color
+            return next
+          }),
+        },
+      }))
+    },
+
+    setRecordNameColor: (id, nameColor) => {
+      set((s) => ({
+        project: {
+          ...s.project,
+          records: s.project.records.map((r) => {
+            if (r.id !== id) return r
+            const next = { ...r }
+            if (nameColor === undefined) delete next.nameColor
+            else next.nameColor = nameColor
             return next
           }),
         },
