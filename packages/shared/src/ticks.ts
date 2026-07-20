@@ -54,6 +54,7 @@ export function unionTicks(...arrays: string[][]): string[] {
  * Align cumulative `counts` (indexed by `fromTicks`) onto `toTicks`.
  * For each target day, uses the last cumulative value whose source day ≤ target.
  * Days before the first source tick get 0.
+ * Both tick arrays must be sorted ascending.
  */
 export function alignCountsToTicks(
   fromTicks: string[],
@@ -63,6 +64,9 @@ export function alignCountsToTicks(
   if (fromTicks.length !== counts.length) {
     throw new Error(`fromTicks length (${fromTicks.length}) !== counts length (${counts.length})`)
   }
+  assertSortedAscending(fromTicks, 'fromTicks')
+  assertSortedAscending(toTicks, 'toTicks')
+
   const result = new Array<number>(toTicks.length)
   let i = 0
   let last = 0
@@ -75,4 +79,14 @@ export function alignCountsToTicks(
     result[t] = last
   }
   return result
+}
+
+function assertSortedAscending(ticks: string[], label: string): void {
+  for (let i = 1; i < ticks.length; i++) {
+    const prev = ticks[i - 1]!
+    const cur = ticks[i]!
+    if (cur < prev) {
+      throw new Error(`${label} must be sorted ascending (saw ${prev} before ${cur})`)
+    }
+  }
 }

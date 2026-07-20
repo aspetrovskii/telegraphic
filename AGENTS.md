@@ -35,7 +35,7 @@ State: Zustand. Tests: Vitest (unit), Playwright (e2e + visual snapshots). Deplo
 
 ## Definition of done for any PR
 
-CI green (typecheck, lint, unit, build, e2e), Bugbot findings addressed, Vercel preview smoke-tested against the phase acceptance checklist, PR description includes the checklist and screenshots.
+CI green (typecheck, lint, unit, build, e2e), Vercel preview smoke-tested against the phase acceptance checklist, PR description includes the checklist and screenshots.
 
 ## Cursor Cloud specific instructions
 

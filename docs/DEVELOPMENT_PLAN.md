@@ -14,9 +14,8 @@ Rejected alternatives (for the record):
 ### Quality gate (every PR)
 
 1. **CI (GitHub Actions)**: typecheck, ESLint + Prettier check, Vitest unit tests, build, Playwright e2e + visual snapshots. Branch protection on `main` requires all checks green.
-2. **Cursor Bugbot** review on the PR; agent fixes findings before requesting merge.
-3. **Vercel preview deploy** on every PR; the phase agent (or a follow-up `browser-use` agent) smoke-tests the preview URL against the phase's acceptance checklist.
-4. Human = final merge click only (or auto-merge once trust is established).
+2. **Vercel preview deploy** on every PR; the phase agent (or a follow-up `browser-use` agent) smoke-tests the preview URL against the phase's acceptance checklist.
+3. Human = final merge click only (or auto-merge once trust is established).
 
 ### Autonomy mechanics in Cursor
 
@@ -36,7 +35,7 @@ Rejected alternatives (for the record):
   - `packages/shared` — Project/Theme types, parser, bar-race engine (framework-free, fully unit-tested)
 - **Branching**: trunk-based; `feat/phase-N-<slug>` branches; squash-merge to `main`; linear history.
 - **Conventional Commits** + PR title lint; CHANGELOG later via release-please if needed.
-- **Branch protection on `main`**: required status checks (ci, e2e), required Bugbot review pass, no direct pushes.
+- **Branch protection on `main`**: required status checks (ci, e2e), no direct pushes.
 - **Templates**: `.github/PULL_REQUEST_TEMPLATE.md` (summary, phase checklist, screenshots from browser test), issue templates (bug/feature).
 - **CI** (`.github/workflows/ci.yml`): install → typecheck → lint → unit → build → Playwright (with cached browsers); visual snapshots stored in-repo, updated only deliberately.
 - **CD**: Vercel Git integration — preview per PR, production on `main`. Secrets (Turso URL/token, session secret) in Vercel + GitHub environments, never in repo.

@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { z } from 'zod'
-import { health as sharedHealth } from '@telegraphic/shared'
+import { health as sharedHealth } from '@telegraphic/shared/health'
 
 const healthResponseSchema = z.object({
   ok: z.literal(true),

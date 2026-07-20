@@ -1,6 +1,6 @@
 /**
- * @telegraphic/shared — types + deterministic canvas bar-race engine.
- * Parser lands in Phase 1; this package currently ships types + engine (Phase 2).
+ * @telegraphic/shared — types, Telegram export parser, and deterministic canvas bar-race engine.
+ * Pure functions only in the public API; no DOM / React.
  */
 
 export { PACKAGE_NAME, health } from './health.js'
@@ -54,6 +54,30 @@ export {
 } from './types/index.js'
 
 export { isIsoDate, enumerateDays, unionTicks, alignCountsToTicks } from './ticks.js'
+
+export {
+  ParseError,
+  type ParseErrorCode,
+  telegramChatExportSchema,
+  telegramMessageSchema,
+  isFullAccountExport,
+  type TelegramChatExport,
+  type TelegramMessage,
+  aggregateDailyCumulative,
+  dayKeyFromTelegramDate,
+  isCountableMessage,
+  parsedExportToRecord,
+  type ParsedChatExport,
+  type ParseProgress,
+  type ParseProgressStage,
+  type ProgressCallback,
+  parseTelegramChatExport,
+  parseTelegramChatExportJson,
+  parseTelegramChatExportBytes,
+  parseTelegramChatExportZip,
+  parseTelegramExportBytes,
+  looksLikeZip,
+} from './parser/index.js'
 
 export {
   render,

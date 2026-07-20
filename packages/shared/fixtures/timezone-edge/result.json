@@ -1,0 +1,25 @@
+{
+  "name": "Timezone edge",
+  "type": "personal_chat",
+  "id": 4004,
+  "messages": [
+    {
+      "id": 1,
+      "type": "message",
+      "date": "2024-06-15T23:30:00",
+      "date_unixtime": "1718494200",
+      "from": "LocalUser",
+      "from_id": "user1",
+      "text": "late evening local — calendar day must stay 2024-06-15"
+    },
+    {
+      "id": 2,
+      "type": "message",
+      "date": "2024-06-16T00:15:00",
+      "date_unixtime": "1718496900",
+      "from": "LocalUser",
+      "from_id": "user1",
+      "text": "just after midnight local — calendar day 2024-06-16"
+    }
+  ]
+}

@@ -14,7 +14,8 @@ export default tseslint.config(
       '**/playwright-report/**',
       '**/test-results/**',
       '**/.vercel/**',
-      'api/[[...route]].js',
+      // Generated Vercel serverless bundle (brackets in filename break simple globs)
+      'api/**/*.js',
       'api/package.json',
     ],
   },
