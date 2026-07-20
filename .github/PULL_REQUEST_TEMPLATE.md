@@ -24,7 +24,9 @@
 
 - [ ] CI green (typecheck, lint, unit, build, e2e)
 - [ ] Vercel preview smoke-tested (or manual dashboard steps documented if secrets/project missing)
+- [ ] GitHub auto-merge enabled (squash), subject to branch protection
 - [ ] No out-of-phase product features
+- [ ] Tracking issue updated (PR link; labels per `docs/AUTOMATIONS_SETUP.md`)
 
 ## Screenshots / recordings
 

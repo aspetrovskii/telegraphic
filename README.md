@@ -2,7 +2,7 @@
 
 Browser app that turns **Telegram Desktop** chat exports into customizable **bar-chart-race** videos (live preview + MP4 in the browser), with a Figma-like editor, Drive-like home page, and view-only share links.
 
-> **Status:** Phase 0 scaffold. Product features (parser, engine, editor, auth) land in later phases — see [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md).
+> **Status:** Phases 0–2 on `main` (scaffold, parser, bar-race engine). Remaining work (editor → export → backend → share) is driven by the Automations chain — see [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) and [`docs/AUTOMATIONS_SETUP.md`](docs/AUTOMATIONS_SETUP.md).
 
 ## Stack
 
@@ -54,7 +54,7 @@ Runs:
 ```
 apps/web          Vite + React UI
 apps/api          Hono API (local Node server)
-packages/shared   Shared types / parser / engine (placeholder in Phase 0)
+packages/shared   Shared types / parser / bar-race engine
 api/              Vercel catch-all serverless entry (generated at build)
 docs/             PRD, development plan, Stitch guide
 ```
@@ -81,5 +81,6 @@ Do not commit secrets. Configure production values in the Vercel project and Git
 
 - [`AGENTS.md`](AGENTS.md) — standing instructions
 - [`docs/PRD.md`](docs/PRD.md) — product spec
-- [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) — phases & quality gate
+- [`docs/DEVELOPMENT_PLAN.md`](docs/DEVELOPMENT_PLAN.md) — phases, DAG, quality gate, automation roles
+- [`docs/AUTOMATIONS_SETUP.md`](docs/AUTOMATIONS_SETUP.md) — configure dispatcher / builder / babysit / review + auto-merge
 - [`docs/STITCH_DESIGN_GUIDE.md`](docs/STITCH_DESIGN_GUIDE.md) — design authority (Stitch)
