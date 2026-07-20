@@ -41,6 +41,8 @@ export type FrameLayout = {
   axisCeiling: number
   /** Max bar track width in px (before scale). */
   trackWidth: number
+  /** Bar length scale factor (settings.scale / 100). */
+  barScale: number
   bars: BarLayout[]
   timerDate: string | null
   topN: number
@@ -78,6 +80,7 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
       padBottom,
       axisCeiling: 1,
       trackWidth,
+      barScale: scale,
       bars: [],
       timerDate: pos.timerDate,
       topN,
@@ -197,6 +200,7 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
     padBottom,
     axisCeiling,
     trackWidth,
+    barScale: scale,
     bars,
     timerDate: pos.timerDate,
     topN,

@@ -20,9 +20,18 @@ export type PlaybackPosition = {
   totalSeconds: number
 }
 
+function utcDayNumber(iso: string): number {
+  const [y, m, d] = iso.split('-').map(Number) as [number, number, number]
+  return Date.UTC(y, m - 1, d) / 86_400_000
+}
+
 /**
  * Map wall-clock `tSec` into a fractional playback-tick position.
  * Start/finish delays freeze the first/last frame.
+ *
+ * - `totalLength`: progress is uniform across playback tick indices.
+ * - `daysPerSecond`: progress is uniform across calendar days between the
+ *   first and last playback ticks, so unequal gaps get proportional wall time.
  */
 export function playbackPositionAt(project: Project, tSec: number): PlaybackPosition {
   const { animationSeconds, totalSeconds } = computeProjectDuration(project)
@@ -43,10 +52,42 @@ export function playbackPositionAt(project: Project, tSec: number): PlaybackPosi
   raceProgress = clamp01(raceProgress)
 
   const last = Math.max(0, ticks.length - 1)
-  const tickFloat = raceProgress * last
-  const tickIndexA = Math.min(last, Math.floor(tickFloat))
-  const tickIndexB = Math.min(last, tickIndexA + (ticks.length <= 1 ? 0 : 1))
-  const tickT = ticks.length <= 1 ? 0 : clamp01(tickFloat - tickIndexA)
+
+  let tickIndexA = 0
+  let tickIndexB = 0
+  let tickT = 0
+  let tickFloat = 0
+
+  if (ticks.length <= 1) {
+    tickIndexA = 0
+    tickIndexB = 0
+    tickT = 0
+    tickFloat = 0
+  } else if (project.settings.speedMode === 'daysPerSecond') {
+    const startDay = utcDayNumber(ticks[0]!)
+    const endDay = utcDayNumber(ticks[last]!)
+    const targetDay = startDay + raceProgress * (endDay - startDay)
+    let a = 0
+    for (let i = 0; i < last; i++) {
+      if (utcDayNumber(ticks[i + 1]!) >= targetDay - 1e-9) {
+        a = i
+        break
+      }
+      a = i
+    }
+    const b = Math.min(last, a + 1)
+    const dayA = utcDayNumber(ticks[a]!)
+    const dayB = utcDayNumber(ticks[b]!)
+    tickIndexA = a
+    tickIndexB = b
+    tickT = dayB <= dayA ? 0 : clamp01((targetDay - dayA) / (dayB - dayA))
+    tickFloat = a + tickT
+  } else {
+    tickFloat = raceProgress * last
+    tickIndexA = Math.min(last, Math.floor(tickFloat))
+    tickIndexB = Math.min(last, tickIndexA + 1)
+    tickT = clamp01(tickFloat - tickIndexA)
+  }
 
   const timerDate =
     ticks.length === 0

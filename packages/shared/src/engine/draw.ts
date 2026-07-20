@@ -49,10 +49,10 @@ function drawFrontiers(ctx: EngineCanvasContext, layout: FrameLayout, theme: The
 
   for (let i = 0; i < ticks.length; i++) {
     const value = ticks[i]!
-    const x = layout.padLeft + (value / layout.axisCeiling) * layout.trackWidth
+    const x = layout.padLeft + (value / layout.axisCeiling) * layout.trackWidth * layout.barScale
     if (mode === 'stripes' && i % 2 === 1) {
       const prev = ticks[i - 1] ?? 0
-      const x0 = layout.padLeft + (prev / layout.axisCeiling) * layout.trackWidth
+      const x0 = layout.padLeft + (prev / layout.axisCeiling) * layout.trackWidth * layout.barScale
       ctx.fillStyle = STRIPE_COLOR
       ctx.fillRect(x0, layout.padTop, Math.max(0, x - x0), Math.max(0, plotBottom - layout.padTop))
     }
