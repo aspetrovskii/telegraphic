@@ -1,0 +1,13 @@
+---
+description: UI colors and radii come from design tokens only
+globs: apps/web/**/*.{ts,tsx,css}
+alwaysApply: false
+---
+
+# UI tokens (no hard-coded colors)
+
+- Colors, radii, fonts, and spacing come from **CSS variables** derived from Stitch `DESIGN.md` tokens.
+- Do **not** hard-code hex/rgb colors in React components (inline styles or Tailwind arbitrary values like `bg-[#abc]`).
+- Prefer `var(--token-name)` in CSS modules / global styles.
+- Stitch is the design authority for tokens and IA — fetch via MCP before building product UI (Phase 3+). Adapt layouts; do not pixel-copy Stitch screens or paste generated code wholesale.
+- Phase 0 may use a minimal token set in `:root` as placeholders until DESIGN.md is imported.

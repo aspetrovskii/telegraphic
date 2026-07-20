@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Product requirements
+    url: https://github.com/aspetrovskii/telegraphic/blob/main/docs/PRD.md
+    about: Read the PRD before requesting features outside MVP scope.
