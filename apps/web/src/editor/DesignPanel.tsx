@@ -25,12 +25,7 @@ const FRONTIER_OPTIONS: { value: ValueFrontiers; label: string }[] = [
   { value: 'off', label: 'Off' },
 ]
 
-const TIMER_POSITIONS: TimerPosition[] = [
-  'top-left',
-  'top-right',
-  'bottom-left',
-  'bottom-right',
-]
+const TIMER_POSITIONS: TimerPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
 
 const TIMER_FORMATS: TimerFormat[] = ['DD/MM/YY', 'DD MMM YYYY', 'MMM YYYY', 'YYYY', 'Q# YYYY']
 
@@ -540,9 +535,7 @@ function CardDesign() {
               data-testid="value-position"
               aria-label="Value position"
               value={card.valueLabel.position}
-              onChange={(e) =>
-                updateValueLabel({ position: e.target.value as ValueLabelPosition })
-              }
+              onChange={(e) => updateValueLabel({ position: e.target.value as ValueLabelPosition })}
             >
               <option value="outside-end">Outside end</option>
               <option value="inside-end">Inside end</option>
@@ -594,9 +587,7 @@ function CardDesign() {
               data-testid="name-position"
               aria-label="Name position"
               value={card.nameLabel.position}
-              onChange={(e) =>
-                updateNameLabel({ position: e.target.value as NameLabelPosition })
-              }
+              onChange={(e) => updateNameLabel({ position: e.target.value as NameLabelPosition })}
             >
               <option value="inside-end">Inside bar</option>
               <option value="outside">Outside</option>
@@ -829,9 +820,7 @@ function CardDesign() {
             className="field__input"
             data-testid="entrance-animation"
             value={card.entranceAnimation}
-            onChange={(e) =>
-              updateCard({ entranceAnimation: e.target.value as EntranceAnimation })
-            }
+            onChange={(e) => updateCard({ entranceAnimation: e.target.value as EntranceAnimation })}
           >
             <option value="fade">Fade</option>
             <option value="slide-from-edge">Slide from edge</option>
@@ -863,9 +852,9 @@ function CardDesign() {
 
         {selected && (
           <>
-            <label className="field">
+            <div className="field">
               <span className="field__label">Bar color</span>
-              <label className="color-field">
+              <div className="color-field">
                 <input
                   type="color"
                   className="color-field__input"
@@ -876,12 +865,12 @@ function CardDesign() {
                 <span className="color-field__hex">
                   {normalizeHex(selected.color ?? previewColor).toUpperCase()}
                 </span>
-              </label>
-            </label>
+              </div>
+            </div>
 
-            <label className="field">
+            <div className="field">
               <span className="field__label">Name color</span>
-              <label className="color-field">
+              <div className="color-field">
                 <input
                   type="color"
                   className="color-field__input"
@@ -892,8 +881,8 @@ function CardDesign() {
                 <span className="color-field__hex">
                   {normalizeHex(selected.nameColor ?? '#FFFFFF').toUpperCase()}
                 </span>
-              </label>
-            </label>
+              </div>
+            </div>
 
             <div className="field">
               <span className="field__label">Avatar image</span>

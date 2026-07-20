@@ -61,7 +61,9 @@ export type FrameLayout = {
   rowStride: number
 }
 
-function emptyTimerFields(timerDate: string | null): Pick<
+function emptyTimerFields(
+  timerDate: string | null,
+): Pick<
   FrameLayout,
   | 'timerDate'
   | 'timerDateFrom'

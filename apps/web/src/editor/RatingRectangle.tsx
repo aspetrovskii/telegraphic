@@ -44,7 +44,13 @@ export function RatingRectangle() {
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
         const layout = computeFrameLayout(project, tSec)
-        const hit = hitTestBar(layout, project.theme.card.barHeight, project.theme.card.avatar, x, y)
+        const hit = hitTestBar(
+          layout,
+          project.theme.card.barHeight,
+          project.theme.card.avatar,
+          x,
+          y,
+        )
         if (hit) {
           setSelectedRecordId(hit)
           setDesignElement('card')

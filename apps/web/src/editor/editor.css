@@ -858,9 +858,17 @@
 
 .design-tile__swatch--bg {
   background:
-    linear-gradient(90deg, transparent 24%, var(--color-border) 24%, var(--color-border) 25%, transparent 25%),
+    linear-gradient(
+      90deg,
+      transparent 24%,
+      var(--color-border) 24%,
+      var(--color-border) 25%,
+      transparent 25%
+    ),
     var(--color-bg-canvas);
-  background-size: 20px 100%, auto;
+  background-size:
+    20px 100%,
+    auto;
 }
 
 .design-tile__swatch--card {

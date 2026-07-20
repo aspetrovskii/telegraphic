@@ -288,13 +288,15 @@ function drawTimer(ctx: EngineCanvasContext, layout: FrameLayout, theme: Theme):
 
   const measurePrimary = Math.max(ctx.measureText(textFrom).width, ctx.measureText(textTo).width)
   const clockSize = Math.max(12, Math.round(timer.fontSize * 0.45))
-  const clockWidth = clock ? (() => {
-    const prev = ctx.font
-    ctx.font = `${timer.fontWeight} ${clockSize}px ${timer.fontFamily}, Arial, sans-serif`
-    const w = ctx.measureText(clock).width
-    ctx.font = prev
-    return w
-  })() : 0
+  const clockWidth = clock
+    ? (() => {
+        const prev = ctx.font
+        ctx.font = `${timer.fontWeight} ${clockSize}px ${timer.fontFamily}, Arial, sans-serif`
+        const w = ctx.measureText(clock).width
+        ctx.font = prev
+        return w
+      })()
+    : 0
   const padX = 16
   const padY = 10
   const lineGap = clock ? Math.round(timer.fontSize * 0.2) : 0
@@ -419,7 +421,11 @@ function drawOdometerText(
   }
 
   let cursor =
-    ctx.textAlign === 'right' ? textX - total : ctx.textAlign === 'center' ? textX - total / 2 : textX
+    ctx.textAlign === 'right'
+      ? textX - total
+      : ctx.textAlign === 'center'
+        ? textX - total / 2
+        : textX
   const travel = fontSize * 0.9
   const prevAlign = ctx.textAlign
   ctx.textAlign = 'left'
