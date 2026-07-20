@@ -169,8 +169,12 @@ describe('parseTelegramChatExportJson — malformed fixtures', () => {
   })
 
   it('rejects objects that are not a chat export', () => {
+    expect(() => parseTelegramChatExportJson(readFixture('malformed', 'not-a-chat.json'))).toThrow(
+      ParseError,
+    )
     try {
       parseTelegramChatExportJson(readFixture('malformed', 'not-a-chat.json'))
+      expect.unreachable('expected parse to throw')
     } catch (err) {
       expect(err).toBeInstanceOf(ParseError)
       expect((err as ParseError).code).toBe('MISSING_MESSAGES')
@@ -178,9 +182,14 @@ describe('parseTelegramChatExportJson — malformed fixtures', () => {
   })
 
   it('rejects service-only chats with no countable messages', () => {
+    expect(() =>
+      parseTelegramChatExportJson(readFixture('malformed', 'service-only.json')),
+    ).toThrow(ParseError)
     try {
       parseTelegramChatExportJson(readFixture('malformed', 'service-only.json'))
+      expect.unreachable('expected parse to throw')
     } catch (err) {
+      expect(err).toBeInstanceOf(ParseError)
       expect((err as ParseError).code).toBe('NO_COUNTABLE_MESSAGES')
     }
   })
@@ -188,6 +197,7 @@ describe('parseTelegramChatExportJson — malformed fixtures', () => {
   it('rejects empty messages array', () => {
     expect(() => parseTelegramChatExport({ name: 'Empty', messages: [] })).toThrow(ParseError)
   })
+
   it('rejects countable messages with missing or impossible dates', () => {
     expect(() =>
       parseTelegramChatExport({
@@ -196,15 +206,33 @@ describe('parseTelegramChatExportJson — malformed fixtures', () => {
       }),
     ).toThrow(ParseError)
 
+    expect(() =>
+      parseTelegramChatExport({
+        name: 'Impossible',
+        messages: [{ id: 1, type: 'message', date: '2024-02-30T12:00:00', text: 'x' }],
+      }),
+    ).toThrow(ParseError)
+
     try {
       parseTelegramChatExport({
         name: 'Impossible',
         messages: [{ id: 1, type: 'message', date: '2024-02-30T12:00:00', text: 'x' }],
       })
+      expect.unreachable('expected parse to throw')
     } catch (err) {
       expect(err).toBeInstanceOf(ParseError)
       expect((err as ParseError).code).toBe('INVALID_MESSAGE_DATE')
     }
+  })
+
+  it('accepts single-chat exports that include an empty chats.list', () => {
+    const parsed = parseTelegramChatExport({
+      name: 'Alice',
+      chats: { list: [] },
+      messages: [{ id: 1, type: 'message', date: '2024-01-01T10:00:00', text: 'hi' }],
+    })
+    expect(parsed.sourceChatTitle).toBe('Alice')
+    expect(parsed.messageTotal).toBe(1)
   })
 })
 

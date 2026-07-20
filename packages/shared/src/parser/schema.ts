@@ -41,10 +41,8 @@ export type TelegramChatExport = z.infer<typeof telegramChatExportSchema>
 /** Detect full-account export shape (multi-chat). */
 export function isFullAccountExport(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false
-  const obj = value as Record<string, unknown>
-  if ('chats' in obj && obj.chats && typeof obj.chats === 'object') {
-    const chats = obj.chats as Record<string, unknown>
-    if (Array.isArray(chats.list)) return true
-  }
-  return false
+  const obj = value as { chats?: unknown }
+  if (!obj.chats || typeof obj.chats !== 'object') return false
+  const chats = obj.chats as { list?: unknown }
+  return Array.isArray(chats.list) && chats.list.length > 0
 }

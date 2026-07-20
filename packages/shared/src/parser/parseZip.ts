@@ -12,26 +12,26 @@ function normalizeZipPath(path: string): string {
   return path.replace(/\\/g, '/')
 }
 
-function isResultJsonPath(path: string): boolean {
+function zipBasename(path: string): string {
   const normalized = normalizeZipPath(path)
-  return (
-    normalized === 'result.json' ||
-    normalized.endsWith('/result.json') ||
-    normalized.toLowerCase().endsWith('result.json')
-  )
+  const slash = normalized.lastIndexOf('/')
+  return slash >= 0 ? normalized.slice(slash + 1) : normalized
+}
+
+/** True only when the entry basename is exactly `result.json` (case-insensitive). */
+function isResultJsonPath(path: string): boolean {
+  return zipBasename(path).toLowerCase() === 'result.json'
 }
 
 function findResultJsonPath(paths: string[]): string | null {
-  const normalized = paths.map(normalizeZipPath)
-  const exact = normalized.find((p) => p === 'result.json' || p.endsWith('/result.json'))
-  if (exact) {
-    return paths[normalized.indexOf(exact)] ?? exact
-  }
-  const loose = normalized.find((p) => p.toLowerCase().endsWith('result.json'))
-  if (loose) {
-    return paths[normalized.indexOf(loose)] ?? loose
-  }
-  return null
+  // Prefer root `result.json`, then nested `…/result.json`.
+  const root = paths.find((p) => normalizeZipPath(p) === 'result.json')
+  if (root) return root
+  const nested = paths.find((p) => {
+    const n = normalizeZipPath(p)
+    return n.endsWith('/result.json') && zipBasename(n).toLowerCase() === 'result.json'
+  })
+  return nested ?? null
 }
 
 /**
