@@ -1,0 +1,16 @@
+{
+  "name": "Service only",
+  "type": "private_group",
+  "id": 6006,
+  "messages": [
+    {
+      "id": 1,
+      "type": "service",
+      "date": "2024-07-01T12:00:00",
+      "date_unixtime": "1719835200",
+      "action": "create_group",
+      "title": "Service only",
+      "members": ["A"]
+    }
+  ]
+}

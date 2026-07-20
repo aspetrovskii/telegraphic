@@ -1,0 +1,14 @@
+{
+  "about": "Full account export fixture — must be rejected",
+  "chats": {
+    "about": "chats",
+    "list": [
+      {
+        "name": "Chat A",
+        "type": "personal_chat",
+        "id": 1,
+        "messages": []
+      }
+    ]
+  }
+}

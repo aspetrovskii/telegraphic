@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { health as sharedHealth } from '@telegraphic/shared'
+import { health as sharedHealth } from '@telegraphic/shared/health'
 
 type ApiHealth = {
   ok: true
@@ -42,7 +42,7 @@ export function App() {
   return (
     <main className="page">
       <h1 className="brand">Telegraphic</h1>
-      <p className="tagline">Phase 0 scaffold — health check</p>
+      <p className="tagline">Phase 1 — parser &amp; data model ready</p>
       <dl className="status">
         <div>
           <dt>Shared package</dt>
