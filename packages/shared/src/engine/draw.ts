@@ -1,6 +1,7 @@
-import type { Theme } from '../types/theme.js'
+import type { Theme, TimerChangeAnimation } from '../types/theme.js'
 import type { EngineCanvasContext } from './canvas.js'
-import { formatTimerDate, formatValue, initialsFromTitle } from './format.js'
+import { formatTimerClock, formatTimerDate, formatValue, initialsFromTitle } from './format.js'
+import { clamp01 } from './interpolate.js'
 import type { BarLayout, FrameLayout } from './layout.js'
 
 const AXIS_LABEL_COLOR = 'rgba(0,0,0,0.45)'
@@ -180,17 +181,19 @@ function drawBar(
 
   // Name
   if (card.nameLabel.show) {
-    ctx.fillStyle = '#FFFFFF'
+    const insideNameColor = bar.nameColor ?? '#FFFFFF'
+    const outsideNameColor = bar.nameColor ?? bar.color
     ctx.font = `${card.typography.nameFontWeight} ${card.typography.nameFontSize}px ${card.typography.nameFontFamily}, Arial, sans-serif`
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
     const name = ellipsize(ctx, bar.title, card.nameLabel.maxWidth)
     if (card.nameLabel.position === 'inside-end') {
       if (w > 40) {
+        ctx.fillStyle = insideNameColor
         ctx.fillText(name, Math.max(textLeft, x + 8), y + h / 2)
       }
     } else {
-      ctx.fillStyle = bar.color
+      ctx.fillStyle = outsideNameColor
       ctx.fillText(name, x + Math.max(w, 0) + 8, y + h / 2)
     }
   }
@@ -265,21 +268,45 @@ function drawAvatar(
 
 function drawTimer(ctx: EngineCanvasContext, layout: FrameLayout, theme: Theme): void {
   const timer = theme.background.timer
-  if (!timer.show || !layout.timerDate) return
+  const fromIso = layout.timerDateFrom ?? layout.timerDate
+  const toIso = layout.timerDateTo ?? layout.timerDate
+  if (!timer.show || (!fromIso && !toIso)) return
 
-  const text = formatTimerDate(layout.timerDate, timer.format)
+  const textFrom = fromIso ? formatTimerDate(fromIso, timer.format) : ''
+  const textTo = toIso ? formatTimerDate(toIso, timer.format) : textFrom
+  const progress = clamp01(layout.timerTransition)
+  const clock =
+    timer.showTime && layout.timerShowClock ? formatTimerClock(layout.timerDayFraction) : null
+
   ctx.save()
   ctx.globalAlpha = timer.opacity
   ctx.font = `${timer.fontWeight} ${timer.fontSize}px ${timer.fontFamily}, Arial, sans-serif`
+  if (ctx.letterSpacing !== undefined) {
+    ctx.letterSpacing = `${timer.letterSpacing}px`
+  }
   ctx.textBaseline = 'middle'
-  const metrics = ctx.measureText(text)
+
+  const measurePrimary = Math.max(ctx.measureText(textFrom).width, ctx.measureText(textTo).width)
+  const clockSize = Math.max(12, Math.round(timer.fontSize * 0.45))
+  const clockWidth = clock ? (() => {
+    const prev = ctx.font
+    ctx.font = `${timer.fontWeight} ${clockSize}px ${timer.fontFamily}, Arial, sans-serif`
+    const w = ctx.measureText(clock).width
+    ctx.font = prev
+    return w
+  })() : 0
   const padX = 16
   const padY = 10
-  const boxW = metrics.width + padX * 2
-  const boxH = timer.fontSize + padY * 2
+  const lineGap = clock ? Math.round(timer.fontSize * 0.2) : 0
+  const boxW = Math.max(measurePrimary, clockWidth) + padX * 2
+  const boxH = timer.fontSize + (clock ? clockSize + lineGap : 0) + padY * 2
 
   const { x, y, align } = timerAnchor(layout, timer, boxW, boxH)
   if (timer.backdrop !== 'none') {
+    ctx.save()
+    if (timer.backdropBlur > 0 && ctx.filter !== undefined) {
+      ctx.filter = `blur(${timer.backdropBlur}px)`
+    }
     ctx.fillStyle = withOpacity(timer.backdropColor, timer.backdropOpacity)
     if (timer.backdrop === 'pill') {
       roundRectPath(ctx, x, y, boxW, boxH, boxH / 2)
@@ -288,13 +315,131 @@ function drawTimer(ctx: EngineCanvasContext, layout: FrameLayout, theme: Theme):
       roundRectPath(ctx, x, y, boxW, boxH, 8)
       ctx.fill()
     }
+    ctx.restore()
   }
 
   ctx.fillStyle = timer.color
   ctx.textAlign = align
   const textX = align === 'left' ? x + padX : align === 'right' ? x + boxW - padX : x + boxW / 2
-  ctx.fillText(text, textX, y + boxH / 2)
+  const primaryY = clock ? y + padY + timer.fontSize / 2 : y + boxH / 2
+
+  drawTimerPrimary(ctx, {
+    textFrom,
+    textTo,
+    progress,
+    animation: timer.changeAnimation,
+    textX,
+    primaryY,
+    fontSize: timer.fontSize,
+    baseAlpha: timer.opacity,
+  })
+
+  if (clock) {
+    ctx.globalAlpha = timer.opacity
+    ctx.font = `${timer.fontWeight} ${clockSize}px ${timer.fontFamily}, Arial, sans-serif`
+    ctx.fillStyle = timer.color
+    ctx.fillText(clock, textX, y + padY + timer.fontSize + lineGap + clockSize / 2)
+  }
+
+  if (ctx.letterSpacing !== undefined) {
+    ctx.letterSpacing = '0px'
+  }
+  if (ctx.filter !== undefined) {
+    ctx.filter = 'none'
+  }
   ctx.restore()
+}
+
+function drawTimerPrimary(
+  ctx: EngineCanvasContext,
+  opts: {
+    textFrom: string
+    textTo: string
+    progress: number
+    animation: TimerChangeAnimation
+    textX: number
+    primaryY: number
+    fontSize: number
+    baseAlpha: number
+  },
+): void {
+  const { textFrom, textTo, progress, animation, textX, primaryY, fontSize, baseAlpha } = opts
+  if (textFrom === textTo || animation === 'none' || progress >= 1 - 1e-9) {
+    ctx.globalAlpha = baseAlpha
+    ctx.fillText(textTo || textFrom, textX, primaryY)
+    return
+  }
+  if (progress <= 1e-9) {
+    ctx.globalAlpha = baseAlpha
+    ctx.fillText(textFrom, textX, primaryY)
+    return
+  }
+
+  if (animation === 'fade') {
+    ctx.globalAlpha = baseAlpha * (1 - progress)
+    ctx.fillText(textFrom, textX, primaryY)
+    ctx.globalAlpha = baseAlpha * progress
+    ctx.fillText(textTo, textX, primaryY)
+    return
+  }
+
+  if (animation === 'slide-up') {
+    const travel = fontSize * 0.85
+    ctx.globalAlpha = baseAlpha * (1 - progress)
+    ctx.fillText(textFrom, textX, primaryY - travel * progress)
+    ctx.globalAlpha = baseAlpha * progress
+    ctx.fillText(textTo, textX, primaryY + travel * (1 - progress))
+    return
+  }
+
+  // odometer — roll differing characters upward
+  drawOdometerText(ctx, textFrom, textTo, progress, textX, primaryY, fontSize, baseAlpha)
+}
+
+function drawOdometerText(
+  ctx: EngineCanvasContext,
+  from: string,
+  to: string,
+  progress: number,
+  textX: number,
+  primaryY: number,
+  fontSize: number,
+  baseAlpha: number,
+): void {
+  const len = Math.max(from.length, to.length)
+  const fromPad = from.padStart(len, ' ')
+  const toPad = to.padStart(len, ' ')
+  const widths: number[] = []
+  let total = 0
+  for (let i = 0; i < len; i++) {
+    const ch = toPad[i] === ' ' ? fromPad[i]! : toPad[i]!
+    const w = ctx.measureText(ch === ' ' ? '0' : ch).width
+    widths.push(w)
+    total += w
+  }
+
+  let cursor =
+    ctx.textAlign === 'right' ? textX - total : ctx.textAlign === 'center' ? textX - total / 2 : textX
+  const travel = fontSize * 0.9
+  const prevAlign = ctx.textAlign
+  ctx.textAlign = 'left'
+
+  for (let i = 0; i < len; i++) {
+    const a = fromPad[i]!
+    const b = toPad[i]!
+    const w = widths[i]!
+    if (a === b) {
+      ctx.globalAlpha = baseAlpha
+      ctx.fillText(b === ' ' ? '' : b, cursor, primaryY)
+    } else {
+      ctx.globalAlpha = baseAlpha * (1 - progress)
+      ctx.fillText(a === ' ' ? '' : a, cursor, primaryY - travel * progress)
+      ctx.globalAlpha = baseAlpha * progress
+      ctx.fillText(b === ' ' ? '' : b, cursor, primaryY + travel * (1 - progress))
+    }
+    cursor += w
+  }
+  ctx.textAlign = prevAlign
 }
 
 function timerAnchor(

@@ -70,6 +70,35 @@ describe('editorStore', () => {
     expect(store.getState().project.records.find((r) => r.id === id)).toBeUndefined()
   })
 
+  it('updates theme fields via Design helpers', () => {
+    const store = createEditorStore('fixture')
+    store.getState().updateBackground({ valueFrontiers: 'stripes' })
+    expect(store.getState().project.theme.background.valueFrontiers).toBe('stripes')
+    store.getState().updateFilling({ color: '#112233' })
+    expect(store.getState().project.theme.background.filling.color).toBe('#112233')
+    store.getState().updateTimer({ format: 'YYYY', changeAnimation: 'odometer' })
+    expect(store.getState().project.theme.background.timer.format).toBe('YYYY')
+    expect(store.getState().project.theme.background.timer.changeAnimation).toBe('odometer')
+    store.getState().updateCard({ barHeight: 48, barGap: 12 })
+    expect(store.getState().project.theme.card.barHeight).toBe(48)
+    expect(store.getState().project.theme.card.barGap).toBe(12)
+    store.getState().updateValueLabel({ format: 'raw' })
+    expect(store.getState().project.theme.card.valueLabel.format).toBe('raw')
+  })
+
+  it('sets per-card color and nameColor overrides', () => {
+    const store = createEditorStore('fixture')
+    const id = store.getState().project.records[0]!.id
+    store.getState().setRecordColor(id, '#ff0000')
+    store.getState().setRecordNameColor(id, '#00ff00')
+    const rec = store.getState().project.records.find((r) => r.id === id)!
+    expect(rec.color).toBe('#ff0000')
+    expect(rec.nameColor).toBe('#00ff00')
+    store.getState().setDesignElement('card')
+    expect(store.getState().designElement).toBe('card')
+    expect(store.getState().rightPanel).toBe('design')
+  })
+
   it('adds a parsed export as a new record', () => {
     const store = createEditorStore('fixture')
     const before = store.getState().project.records.length

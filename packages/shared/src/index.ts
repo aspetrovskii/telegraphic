@@ -95,6 +95,7 @@ export {
   clamp01,
   smoothstep,
   formatTimerDate,
+  formatTimerClock,
   formatValue,
   colorForRecordId,
   countAtTick,

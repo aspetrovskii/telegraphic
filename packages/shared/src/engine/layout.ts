@@ -1,7 +1,7 @@
 import type { Project } from '../types/project.js'
 import type { Record as ProjectRecord } from '../types/record.js'
 import { axisCeilingForValues, lerpAxisCeiling } from './axis.js'
-import { colorForRecordId } from './format.js'
+import { colorForRecordId, formatTimerDate } from './format.js'
 import { lerp } from './interpolate.js'
 import { rankRecords, takeTopN } from './ranking.js'
 import { countAtTick, resolvePlaybackTicks, tickIndexInProject } from './ticksWindow.js'
@@ -11,6 +11,8 @@ export type BarLayout = {
   recordId: string
   title: string
   color: string
+  /** Per-card name label color override. */
+  nameColor?: string
   avatarDataUrl?: string
   /** Display value (lerped). */
   value: number
@@ -44,9 +46,38 @@ export type FrameLayout = {
   /** Bar length scale factor (settings.scale / 100). */
   barScale: number
   bars: BarLayout[]
+  /** Settled timer ISO date (matches prior Phase 2 contract). */
   timerDate: string | null
+  /** Timer transition endpoints for change animations (formatted via theme). */
+  timerDateFrom: string | null
+  timerDateTo: string | null
+  /** 0–1 blend from `timerDateFrom` → `timerDateTo` when labels differ. */
+  timerTransition: number
+  /** Day fraction in [0,1) for optional HH:MM second line. */
+  timerDayFraction: number
+  /** Whether smoothing interval allows showing the time line. */
+  timerShowClock: boolean
   topN: number
   rowStride: number
+}
+
+function emptyTimerFields(timerDate: string | null): Pick<
+  FrameLayout,
+  | 'timerDate'
+  | 'timerDateFrom'
+  | 'timerDateTo'
+  | 'timerTransition'
+  | 'timerDayFraction'
+  | 'timerShowClock'
+> {
+  return {
+    timerDate,
+    timerDateFrom: timerDate,
+    timerDateTo: timerDate,
+    timerTransition: 1,
+    timerDayFraction: 0,
+    timerShowClock: false,
+  }
 }
 
 const FALLBACK_BAR_COLOR = '#4E79A7'
@@ -70,6 +101,7 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
   const playbackTicks = resolvePlaybackTicks(project)
   const pos = playbackPositionAt(project, tSec)
 
+  const timerShowClock = project.settings.smoothingInterval < 1
   if (playbackTicks.length === 0 || topN === 0) {
     return {
       width,
@@ -82,7 +114,8 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
       trackWidth,
       barScale: scale,
       bars: [],
-      timerDate: pos.timerDate,
+      ...emptyTimerFields(pos.timerDate),
+      timerShowClock,
       topN,
       rowStride,
     }
@@ -159,6 +192,7 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
       recordId: id,
       title: record.title,
       color: resolveBarColor(record, project.theme.card.palette),
+      ...(record.nameColor !== undefined ? { nameColor: record.nameColor } : {}),
       ...(record.avatarDataUrl !== undefined ? { avatarDataUrl: record.avatarDataUrl } : {}),
       value,
       rank,
@@ -190,6 +224,12 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
     return a.recordId < b.recordId ? -1 : a.recordId > b.recordId ? 1 : 0
   })
 
+  const format = project.theme.background.timer.format
+  const textA = formatTimerDate(isoA, format)
+  const textB = formatTimerDate(isoB, format)
+  const labelsDiffer = textA !== textB
+  const timerTransition = labelsDiffer ? t : 1
+
   return {
     width,
     height,
@@ -202,6 +242,11 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
     barScale: scale,
     bars,
     timerDate: pos.timerDate,
+    timerDateFrom: isoA,
+    timerDateTo: isoB,
+    timerTransition,
+    timerDayFraction: labelsDiffer ? 0 : t,
+    timerShowClock,
     topN,
     rowStride,
   }
