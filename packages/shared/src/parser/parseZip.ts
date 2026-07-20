@@ -23,14 +23,21 @@ function isResultJsonPath(path: string): boolean {
   return zipBasename(path).toLowerCase() === 'result.json'
 }
 
-function findResultJsonPath(paths: string[]): string | null {
-  // Prefer root `result.json`, then nested `…/result.json` (basename match, case-insensitive).
-  const root = paths.find(
-    (p) => zipBasename(p).toLowerCase() === 'result.json' && !normalizeZipPath(p).includes('/'),
-  )
-  if (root) return root
-  const nested = paths.find((p) => isResultJsonPath(p) && normalizeZipPath(p).includes('/'))
-  return nested ?? paths.find((p) => isResultJsonPath(p)) ?? null
+function findResultJsonPath(paths: string[]): string {
+  const matches = paths.filter(isResultJsonPath)
+  if (matches.length === 0) {
+    throw new ParseError(
+      'ZIP_NO_RESULT_JSON',
+      'ZIP does not contain result.json. Export a single chat from Telegram Desktop as JSON.',
+    )
+  }
+  if (matches.length > 1) {
+    throw new ParseError(
+      'ZIP_AMBIGUOUS',
+      `ZIP contains ${matches.length} result.json files; export a single chat archive with one result.json.`,
+    )
+  }
+  return matches[0]!
 }
 
 /**
@@ -80,12 +87,6 @@ export function parseTelegramChatExportZip(
   }
 
   const path = findResultJsonPath(Object.keys(files))
-  if (!path) {
-    throw new ParseError(
-      'ZIP_NO_RESULT_JSON',
-      'ZIP does not contain result.json. Export a single chat from Telegram Desktop as JSON.',
-    )
-  }
 
   const fileBytes = files[path]
   if (!fileBytes) {
