@@ -28,7 +28,7 @@ test('sign up, open editor, rename on home, reload persists', async ({ page }) =
 
   // Rename from home (Phase 7) — editor title save is later phases
   await page.getByTestId('project-menu').first().click()
-  await page.getByRole('button', { name: 'Rename' }).click()
+  await page.getByRole('menuitem', { name: 'Rename' }).click()
   await page.getByTestId('rename-input').fill(title)
   await page.getByTestId('rename-input').press('Enter')
   await expect(page.getByTestId('project-title').first()).toHaveText(title)
