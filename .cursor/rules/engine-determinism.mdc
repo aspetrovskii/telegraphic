@@ -1,0 +1,24 @@
+---
+description: Canvas bar-race engine must stay deterministic
+globs: packages/shared/**/*
+alwaysApply: false
+---
+
+# Engine determinism
+
+Everything in the `packages/shared` engine is a **pure function of `(project, tSec)`**.
+
+## Required
+
+- `render(ctx, project, tSec)` (and layout helpers) must be deterministic: identical inputs → identical pixels / layout.
+- Preview, MP4 export, and Playwright visual tests all call the same engine path — never fork rendering logic.
+
+## Forbidden in the render path
+
+- `Date.now()`, `performance.now()`, or wall-clock time
+- `Math.random()` or other non-seeded randomness
+- DOM / `window` / `document` access
+- React imports or hooks
+- Network I/O
+
+Time for animation comes only from the `tSec` argument (and project settings derived from it).

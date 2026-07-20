@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose a product or engineering change
+title: 'feat: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer aligning with `docs/PRD.md` and the current phase in `docs/DEVELOPMENT_PLAN.md`.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Proposed behavior or API change
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Suggested phase
+      options:
+        - Unsure
+        - Phase 0 — Scaffold
+        - Phase 1 — Parser
+        - Phase 2 — Engine
+        - Phase 3 — Editor shell
+        - Phase 4 — Total & Data
+        - Phase 5 — Design
+        - Phase 6 — Export
+        - Phase 7 — Backend & home
+        - Phase 8 — Sharing & polish
+        - Out of MVP
+    validations:
+      required: true

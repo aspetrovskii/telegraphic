@@ -1,4 +1,4 @@
-# AGENTS.md — Telegraphic
+# Telegraphic — Telegraphic
 
 Standing instructions for every AI agent working in this repository.
 
@@ -40,5 +40,5 @@ CI green (typecheck, lint, unit, build, e2e), Bugbot findings addressed, Vercel 
 ## Cursor Cloud specific instructions
 
 - Toolchain is preinstalled on the VM: Node.js v22.x and pnpm 10.x are on `PATH` (no need to install Node/pnpm or use `nvm`/`corepack`).
-- The repo is still at **Phase 0 (scaffold pending)**: there is no `package.json`, `apps/`, or `packages/` yet, so the documented commands (`pnpm install`, `pnpm dev`, `pnpm test`, etc.) only work once a phase has scaffolded the monorepo. The startup update script runs `pnpm install` only when a root `package.json` exists, so it is a safe no-op until then.
-- After the scaffold lands, use the commands in the `## Commands` section above (`pnpm dev` runs web + api together).
+- After `pnpm install`, use the commands in the `## Commands` section (`pnpm dev` runs web + api together).
+- Scoped agent rules live in `.cursor/rules/` (engine determinism, API privacy, UI tokens).

@@ -1,0 +1,22 @@
+---
+description: API privacy and boundary validation with zod
+globs: apps/api/**/*
+alwaysApply: false
+---
+
+# API privacy & validation
+
+## Privacy
+
+- Raw Telegram messages **never** leave the browser and must **never** be stored or logged by the API.
+- Persist only daily aggregates + theme + project metadata.
+- Never log message content, export JSON bodies, or PII from chat exports.
+
+## Validation
+
+- Validate all external inputs at the boundary with **zod** (request bodies, query params, path params).
+- Trust internal typed code after validation; do not re-validate everywhere.
+
+## Payloads
+
+- Project save payloads are aggregates + theme only; reject oversized or unexpected shapes.

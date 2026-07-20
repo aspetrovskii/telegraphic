@@ -1,0 +1,12 @@
+pnpm-lock.yaml
+dist
+api/*.js
+api/package.json
+coverage
+playwright-report
+test-results
+.vercel
+*.tsbuildinfo
+docs/**
+.cursor/plans/**
+LICENSE

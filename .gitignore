@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Builds
+dist
+api/*.js
+api/package.json
+*.tsbuildinfo
+
+# Test / coverage
+coverage
+playwright-report
+test-results
+blob-report
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Vercel / IDE
+.vercel
+.DS_Store
+*.log
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# OS
+Thumbs.db

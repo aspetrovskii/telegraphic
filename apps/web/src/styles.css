@@ -1,0 +1,84 @@
+:root {
+  --color-bg: #f4f6f8;
+  --color-fg: #1a1d21;
+  --color-muted: #5c6570;
+  --color-surface: #ffffff;
+  --color-accent: #2aabee;
+  --font-sans: 'Segoe UI', system-ui, sans-serif;
+  --radius-md: 12px;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-fg);
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      color-mix(in srgb, var(--color-accent) 18%, transparent),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 80% 0%,
+      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      transparent 40%
+    ),
+    var(--color-bg);
+}
+
+.page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md);
+}
+
+.brand {
+  margin: 0 0 0.5rem;
+  font-size: 2.5rem;
+  letter-spacing: -0.03em;
+}
+
+.tagline {
+  margin: 0 0 var(--space-lg);
+  color: var(--color-muted);
+}
+
+.status {
+  margin: 0;
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
+.status > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 0.5rem 0;
+}
+
+.status > div + div {
+  border-top: 1px solid color-mix(in srgb, var(--color-muted) 20%, transparent);
+}
+
+.status dt {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.status dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
