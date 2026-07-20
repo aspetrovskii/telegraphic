@@ -1,9 +1,88 @@
 /**
- * Shared types, Telegram export parser, and canvas bar-race engine.
- * Phase 0: placeholder only — implement in Phases 1–2.
+ * @telegraphic/shared — types + deterministic canvas bar-race engine.
+ * Parser lands in Phase 1; this package currently ships types + engine (Phase 2).
  */
-export const PACKAGE_NAME = '@telegraphic/shared' as const
 
-export function health(): { ok: true; package: typeof PACKAGE_NAME } {
-  return { ok: true, package: PACKAGE_NAME }
-}
+export { PACKAGE_NAME, health } from './health.js'
+
+export type {
+  Project,
+  CreateProjectInput,
+  Record,
+  CreateRecordInput,
+  TotalSettings,
+  Theme,
+  SpeedMode,
+  ScreenSize,
+  ScreenSizePreset,
+  DatesInterval,
+  ValueFrontiers,
+  FillingMode,
+  ImageFit,
+  TimerPosition,
+  TimerFormat,
+  TimerBackdrop,
+  TimerChangeAnimation,
+  ValueFormat,
+  ValueLabelPosition,
+  NameLabelPosition,
+  AvatarShape,
+  BarFillStyle,
+  ShadowStyle,
+  EntranceAnimation,
+  ThemeFilling,
+  ThemeTimer,
+  ThemeBackground,
+  ThemeValueLabel,
+  ThemeNameLabel,
+  ThemeAvatar,
+  ThemeCardTypography,
+  ThemeCard,
+} from './types/index.js'
+
+export {
+  createProject,
+  createRecord,
+  createDefaultTotalSettings,
+  createDefaultTheme,
+  DEFAULT_TOP_N,
+  DEFAULT_SCALE,
+  DEFAULT_SPEED_VALUE_TOTAL_LENGTH,
+  DEFAULT_SMOOTHING_INTERVAL,
+  SCREEN_SIZE_PRESETS,
+  DEFAULT_BAR_PALETTE,
+} from './types/index.js'
+
+export { isIsoDate, enumerateDays, unionTicks, alignCountsToTicks } from './ticks.js'
+
+export {
+  render,
+  computeFrameLayout,
+  drawFrame,
+  computeProjectDuration,
+  playbackPositionAt,
+  resolvePlaybackTicks,
+  rankRecords,
+  takeTopN,
+  niceCeiling,
+  axisCeilingForValues,
+  lerpAxisCeiling,
+  lerp,
+  clamp01,
+  smoothstep,
+  formatTimerDate,
+  formatValue,
+  colorForRecordId,
+  countAtTick,
+} from './engine/index.js'
+
+export type {
+  EngineCanvasContext,
+  FrameLayout,
+  BarLayout,
+  ProjectDuration,
+  PlaybackPosition,
+  RankedEntry,
+} from './engine/index.js'
+
+export { createEngineFixtureProject } from './fixtures/engineProject.js'

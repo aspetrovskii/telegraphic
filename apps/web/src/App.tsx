@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { health as sharedHealth } from '@telegraphic/shared'
+import { EngineFixturePage } from './EngineFixturePage'
 
 type ApiHealth = {
   ok: true
@@ -7,7 +8,7 @@ type ApiHealth = {
   shared: { ok: true; package: string }
 }
 
-export function App() {
+function HealthPage() {
   const [apiHealth, setApiHealth] = useState<ApiHealth | null>(null)
   const [apiError, setApiError] = useState<string | null>(null)
   const shared = sharedHealth()
@@ -57,4 +58,12 @@ export function App() {
       </dl>
     </main>
   )
+}
+
+export function App() {
+  const path = typeof window !== 'undefined' ? window.location.pathname : '/'
+  if (path === '/engine-fixture' || path.startsWith('/engine-fixture/')) {
+    return <EngineFixturePage />
+  }
+  return <HealthPage />
 }

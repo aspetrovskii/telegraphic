@@ -1,0 +1,107 @@
+import type { TimerFormat } from '../types/theme.js'
+import type { ValueFormat } from '../types/theme.js'
+
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const
+
+function parseIsoDate(iso: string): { y: number; m: number; d: number } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!m) return null
+  return { y: Number(m[1]), m: Number(m[2]), d: Number(m[3]) }
+}
+
+/** Format an ISO date for the timer label. Pure. */
+export function formatTimerDate(isoDate: string, format: TimerFormat): string {
+  const parsed = parseIsoDate(isoDate)
+  if (!parsed) return isoDate
+  const { y, m, d } = parsed
+  const dd = String(d).padStart(2, '0')
+  const mm = String(m).padStart(2, '0')
+  const mon = MONTHS_SHORT[m - 1] ?? mm
+  switch (format) {
+    case 'DD/MM/YY':
+      return `${dd}/${mm}/${String(y).slice(-2)}`
+    case 'DD MMM YYYY':
+      return `${dd} ${mon} ${y}`
+    case 'MMM YYYY':
+      return `${mon} ${y}`
+    case 'YYYY':
+      return String(y)
+    case 'Q# YYYY': {
+      const q = Math.floor((m - 1) / 3) + 1
+      return `Q${q} ${y}`
+    }
+    default:
+      return isoDate
+  }
+}
+
+/**
+ * Format a bar value label.
+ * `compact`: 1280 → 1.3k, 1_280_000 → 1.3M (decimals from theme).
+ */
+export function formatValue(
+  value: number,
+  opts: { format: ValueFormat; decimals: number; thousandsSeparator: boolean },
+): string {
+  const v = Number.isFinite(value) ? value : 0
+  if (opts.format === 'compact') {
+    const abs = Math.abs(v)
+    const decimals = Math.max(0, Math.floor(opts.decimals))
+    if (abs >= 1_000_000) {
+      return trimTrailingZeros((v / 1_000_000).toFixed(decimals)) + 'M'
+    }
+    if (abs >= 1_000) {
+      return trimTrailingZeros((v / 1_000).toFixed(decimals)) + 'k'
+    }
+    return trimTrailingZeros(v.toFixed(Math.min(decimals, 0)))
+  }
+
+  const rounded = Math.round(v)
+  const raw = String(rounded)
+  if (!opts.thousandsSeparator) return raw
+  return raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+function trimTrailingZeros(s: string): string {
+  if (!s.includes('.')) return s
+  return s.replace(/\.?0+$/, '')
+}
+
+/** Deterministic color from palette by record id. */
+export function colorForRecordId(
+  recordId: string,
+  palette: readonly string[],
+  fallback: string,
+): string {
+  if (palette.length === 0) return fallback
+  let hash = 0
+  for (let i = 0; i < recordId.length; i++) {
+    hash = (hash * 31 + recordId.charCodeAt(i)) | 0
+  }
+  const idx = Math.abs(hash) % palette.length
+  return palette[idx] ?? fallback
+}
+
+/** Initials fallback for missing avatars (up to 2 chars). */
+export function initialsFromTitle(title: string): string {
+  const parts = title.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) {
+    const w = parts[0]!
+    return w.slice(0, 2).toUpperCase()
+  }
+  return (parts[0]!.charAt(0) + parts[1]!.charAt(0)).toUpperCase()
+}
