@@ -110,3 +110,10 @@ export type {
 } from './engine/index.js'
 
 export { createEngineFixtureProject } from './fixtures/engineProject.js'
+
+export {
+  addParsedExportToProject,
+  recordMessageTotal,
+  projectDateBounds,
+  type AddParsedRecordOptions,
+} from './project/addRecord.js'

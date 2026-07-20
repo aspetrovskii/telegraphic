@@ -1,5 +1,7 @@
 import { useEditorStore } from './useEditorStore'
 import type { LeftPanelId, RightPanelId } from './editorStore'
+import { TotalPanel } from './TotalPanel'
+import { DataPanel } from './DataPanel'
 
 const LEFT_TITLES: Record<LeftPanelId, string> = {
   total: 'Total',
@@ -8,7 +10,7 @@ const LEFT_TITLES: Record<LeftPanelId, string> = {
 }
 
 /**
- * Empty shell panels for Phase 3 — Phase 4/5 fill controls.
+ * Left docked panels. Total & Data are Phase 4; Share stays a stub until Phase 8.
  */
 export function LeftEditorPanel() {
   const leftPanel = useEditorStore((s) => s.leftPanel)
@@ -22,8 +24,12 @@ export function LeftEditorPanel() {
       <header className="editor-panel__header">
         <h2 className="editor-panel__title">{LEFT_TITLES[leftPanel]}</h2>
       </header>
-      <div className="editor-panel__body">
-        <p className="editor-panel__placeholder">Controls coming in a later phase.</p>
+      <div className="editor-panel__body editor-panel__body--scroll">
+        {leftPanel === 'total' && <TotalPanel />}
+        {leftPanel === 'data' && <DataPanel />}
+        {leftPanel === 'share' && (
+          <p className="editor-panel__placeholder">Controls coming in a later phase.</p>
+        )}
       </div>
     </aside>
   )

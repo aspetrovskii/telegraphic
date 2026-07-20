@@ -51,16 +51,18 @@ Implemented in `apps/web/src/styles/tokens.css` (imported by `styles.css`).
 | Card | `--shadow-card`: `0 1px 3px color-mix(in srgb, #1A1D21 10%, transparent)` |
 | Toolbar | `--shadow-toolbar`: `0 1px 3px color-mix(in srgb, #1A1D21 8%, transparent)` |
 
-## Editor IA (Phase 3 — `editor-default`)
+## Editor IA (Phase 3–4)
 
 - Top-left: back, title, `Total` / `Data` / `Share` toggles
 - Top-right: `Design` toggle
 - Center: infinite canvas (dot grid) + one rating rectangle
 - Bottom: preview player (play/pause, scrub, time)
 - Zoom controls: canvas bottom-right (percent + fit)
-- Empty docked panels until Phases 4–5
+- **Total panel** (`editor-total`): Top N, Dates interval, Scale, Screen size, Speed mode/value, Start/finish delay, Smoothing interval — live-bound to engine
+- **Data panel** (`editor-data`): search, record rows (visibility, avatar upload, rename, delete), Add record → import modal (`editor-import-modal`)
+- Share / Design panels remain stubs until later phases
 
-Adapt layouts to PRD behavior; do not pixel-copy Stitch frames.
+Adapt layouts to PRD behavior; do not pixel-copy Stitch frames. Stitch project: Telegraphic Design (fetched via MCP for Phase 4).
 
 ## Rating defaults (engine / Theme)
 
