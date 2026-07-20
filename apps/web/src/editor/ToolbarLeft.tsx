@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 import { Link } from 'react-router-dom'
-import { useEditorStore } from './EditorContext'
-=======
 import { useEditorStore } from './useEditorStore'
->>>>>>> ca824bc (fix(web): capture-phase canvas pan and editor store module split)
 import type { LeftPanelId } from './editorStore'
 
 const LEFT_BUTTONS: { id: LeftPanelId; label: string }[] = [
@@ -19,16 +15,12 @@ export function ToolbarLeft() {
 
   return (
     <div className="editor-toolbar editor-toolbar--left" data-testid="toolbar-left">
-<<<<<<< HEAD
-      <Link to="/" className="editor-toolbar__back" aria-label="Back to Home" data-testid="editor-back">
-=======
-      <a
-        href="/"
+      <Link
+        to="/"
         className="editor-toolbar__back"
         aria-label="Back to Home"
         data-testid="editor-back"
       >
->>>>>>> ca824bc (fix(web): capture-phase canvas pan and editor store module split)
         ←
       </Link>
       <h1 className="editor-toolbar__title" data-testid="editor-title" title={title}>
