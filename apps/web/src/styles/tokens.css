@@ -1,0 +1,54 @@
+/**
+ * Design tokens → CSS variables.
+ * Names map from docs/DESIGN.md (Stitch DESIGN.md contract).
+ */
+:root {
+  --color-bg-app: #f0f2f5;
+  --color-bg-canvas: #e8ecf0;
+  --color-bg-panel: #ffffff;
+  --color-bg-surface: #f7f9fb;
+  --color-text-primary: #1a1d21;
+  --color-text-secondary: #5c6570;
+  --color-text-on-accent: #ffffff;
+  --color-on-accent: #ffffff;
+  --color-accent: #2aabee;
+  --color-accent-hover: #1e96d5;
+  --color-danger: #d94a4a;
+  --color-border: #d5dbe1;
+  --color-border-strong: #98a2b3;
+  --color-selection: #2aabee;
+
+  --radius-panel: 12px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+
+  --font-ui: 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif;
+  --font-numeric: 'Segoe UI', system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  --shadow-panel: 0 4px 24px color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  --shadow-card: 0 1px 3px color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --shadow-toolbar: 0 1px 3px color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+
+  /* Legacy aliases used by engine fixture / older pages */
+  --color-bg: var(--color-bg-canvas);
+  --color-fg: var(--color-text-primary);
+  --color-muted: var(--color-text-secondary);
+  --color-surface: var(--color-bg-panel);
+  --font-sans: var(--font-ui);
+  --radius-md: var(--radius-panel);
+  --space-md: var(--space-4);
+  --space-lg: var(--space-8);
+}
