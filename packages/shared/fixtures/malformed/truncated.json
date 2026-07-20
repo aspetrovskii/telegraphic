@@ -1,0 +1,10 @@
+{
+  "name": "Truncated",
+  "type": "personal_chat",
+  "id": 5005,
+  "messages": [
+    {
+      "id": 1,
+      "type": "message",
+      "date": "2024-01-01T10:00:00",
+      "text": "oops this file is cut off mid-objec

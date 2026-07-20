@@ -1,0 +1,34 @@
+{
+  "name": "Alice",
+  "type": "personal_chat",
+  "id": 1001,
+  "messages": [
+    {
+      "id": 1,
+      "type": "message",
+      "date": "2024-01-01T10:00:00",
+      "date_unixtime": "1704103200",
+      "from": "Alice",
+      "from_id": "user1",
+      "text": "hello"
+    },
+    {
+      "id": 2,
+      "type": "message",
+      "date": "2024-01-01T11:00:00",
+      "date_unixtime": "1704106800",
+      "from": "Bob",
+      "from_id": "user2",
+      "text": "hi"
+    },
+    {
+      "id": 3,
+      "type": "message",
+      "date": "2024-01-02T09:00:00",
+      "date_unixtime": "1704186000",
+      "from": "Alice",
+      "from_id": "user1",
+      "text": "again"
+    }
+  ]
+}

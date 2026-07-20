@@ -1,0 +1,65 @@
+{
+  "name": "Group with services",
+  "type": "private_group",
+  "id": 3003,
+  "messages": [
+    {
+      "id": 1,
+      "type": "service",
+      "date": "2024-05-01T10:00:00",
+      "date_unixtime": "1714557600",
+      "actor": "Alice",
+      "actor_id": "user1",
+      "action": "create_group",
+      "title": "Group with services",
+      "members": ["Alice", "Bob"]
+    },
+    {
+      "id": 2,
+      "type": "service",
+      "date": "2024-05-01T10:01:00",
+      "date_unixtime": "1714557660",
+      "actor": "Alice",
+      "actor_id": "user1",
+      "action": "invite_members",
+      "members": ["Carol"]
+    },
+    {
+      "id": 3,
+      "type": "message",
+      "date": "2024-05-01T10:05:00",
+      "date_unixtime": "1714557900",
+      "from": "Alice",
+      "from_id": "user1",
+      "text": "welcome"
+    },
+    {
+      "id": 4,
+      "type": "service",
+      "date": "2024-05-02T09:00:00",
+      "date_unixtime": "1714640400",
+      "actor": "Bob",
+      "actor_id": "user2",
+      "action": "pin_message",
+      "message_id": 3
+    },
+    {
+      "id": 5,
+      "type": "message",
+      "date": "2024-05-02T09:30:00",
+      "date_unixtime": "1714642200",
+      "from": "Bob",
+      "from_id": "user2",
+      "text": "thanks"
+    },
+    {
+      "id": 6,
+      "type": "message",
+      "date": "2024-05-02T10:00:00",
+      "date_unixtime": "1714644000",
+      "from": "Carol",
+      "from_id": "user3",
+      "text": "hi"
+    }
+  ]
+}

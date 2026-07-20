@@ -1,9 +1,80 @@
 /**
- * Shared types, Telegram export parser, and canvas bar-race engine.
- * Phase 0: placeholder only — implement in Phases 1–2.
+ * @telegraphic/shared — types, Telegram export parser, (later) bar-race engine.
+ * Pure functions only in the public API; no DOM / React.
  */
-export const PACKAGE_NAME = '@telegraphic/shared' as const
 
-export function health(): { ok: true; package: typeof PACKAGE_NAME } {
-  return { ok: true, package: PACKAGE_NAME }
-}
+export { PACKAGE_NAME, health } from './health.js'
+
+export type {
+  Project,
+  CreateProjectInput,
+  Record,
+  CreateRecordInput,
+  TotalSettings,
+  Theme,
+  SpeedMode,
+  ScreenSize,
+  ScreenSizePreset,
+  DatesInterval,
+  ValueFrontiers,
+  FillingMode,
+  ImageFit,
+  TimerPosition,
+  TimerFormat,
+  TimerBackdrop,
+  TimerChangeAnimation,
+  ValueFormat,
+  ValueLabelPosition,
+  NameLabelPosition,
+  AvatarShape,
+  BarFillStyle,
+  ShadowStyle,
+  EntranceAnimation,
+  ThemeFilling,
+  ThemeTimer,
+  ThemeBackground,
+  ThemeValueLabel,
+  ThemeNameLabel,
+  ThemeAvatar,
+  ThemeCardTypography,
+  ThemeCard,
+} from './types/index.js'
+
+export {
+  createProject,
+  createRecord,
+  createDefaultTotalSettings,
+  createDefaultTheme,
+  DEFAULT_TOP_N,
+  DEFAULT_SCALE,
+  DEFAULT_SPEED_VALUE_TOTAL_LENGTH,
+  DEFAULT_SMOOTHING_INTERVAL,
+  SCREEN_SIZE_PRESETS,
+  DEFAULT_BAR_PALETTE,
+} from './types/index.js'
+
+export { isIsoDate, enumerateDays, unionTicks, alignCountsToTicks } from './ticks.js'
+
+export {
+  ParseError,
+  type ParseErrorCode,
+  telegramChatExportSchema,
+  telegramMessageSchema,
+  isFullAccountExport,
+  type TelegramChatExport,
+  type TelegramMessage,
+  aggregateDailyCumulative,
+  dayKeyFromTelegramDate,
+  isCountableMessage,
+  parsedExportToRecord,
+  type ParsedChatExport,
+  type ParseProgress,
+  type ParseProgressStage,
+  type ProgressCallback,
+  parseTelegramChatExport,
+  parseTelegramChatExportJson,
+  parseTelegramChatExportBytes,
+  parseTelegramChatExportZip,
+  parseTelegramExportBytes,
+  looksLikeZip,
+} from './parser/index.js'
