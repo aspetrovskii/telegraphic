@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import {
   PACKAGE_NAME,
   ParseError,
+  addParsedExportToProject,
   alignCountsToTicks,
   createDefaultTheme,
   createDefaultTotalSettings,
@@ -19,6 +20,7 @@ import {
   parseTelegramChatExportZip,
   parseTelegramExportBytes,
   parsedExportToRecord,
+  recordMessageTotal,
   render,
   unionTicks,
 } from './index.js'
@@ -256,6 +258,26 @@ describe('ZIP parsing', () => {
   it('auto-detects raw JSON bytes', () => {
     const parsed = parseTelegramExportBytes(readFixtureBytes('valid-tiny', 'result.json'))
     expect(parsed.sourceChatTitle).toBe('Alice')
+  })
+})
+
+describe('addParsedExportToProject', () => {
+  it('unions ticks, realigns existing records, and appends the new record', () => {
+    const project = createEngineFixtureProject()
+    const beforeCount = project.records.length
+    const parsed = parseTelegramChatExportJson(readFixture('valid-tiny', 'result.json'))
+    const next = addParsedExportToProject(project, parsed, { id: 'rec-alice' })
+    expect(next.records).toHaveLength(beforeCount + 1)
+    expect(next.ticks).toEqual(unionTicks(project.ticks, parsed.ticks))
+    const alice = next.records.find((r) => r.id === 'rec-alice')
+    expect(alice?.sourceChatTitle).toBe('Alice')
+    expect(alice?.counts).toHaveLength(next.ticks.length)
+    expect(recordMessageTotal(alice!)).toBe(parsed.messageTotal)
+    // Existing series realigned without losing final totals
+    for (const prev of project.records) {
+      const aligned = next.records.find((r) => r.id === prev.id)!
+      expect(recordMessageTotal(aligned)).toBe(recordMessageTotal(prev))
+    }
   })
 })
 

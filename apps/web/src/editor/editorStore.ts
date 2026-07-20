@@ -1,8 +1,13 @@
 import { create } from 'zustand'
 import {
+  addParsedExportToProject,
   computeProjectDuration,
   createEngineFixtureProject,
+  SCREEN_SIZE_PRESETS,
+  type ParsedChatExport,
   type Project,
+  type ScreenSizePreset,
+  type TotalSettings,
 } from '@telegraphic/shared'
 
 export type LeftPanelId = 'total' | 'data' | 'share'
@@ -15,6 +20,13 @@ export type CanvasView = {
   zoom: number
 }
 
+export type ImportModalState = {
+  open: boolean
+  progressRatio: number | null
+  progressStage: string | null
+  error: string | null
+}
+
 type EditorState = {
   project: Project
   tSec: number
@@ -25,6 +37,8 @@ type EditorState = {
   canvas: CanvasView
   /** Latest measured viewport size for fit calculations. */
   viewport: { width: number; height: number }
+  recordSearch: string
+  importModal: ImportModalState
 
   setProject: (project: Project) => void
   setTSec: (tSec: number) => void
@@ -37,6 +51,20 @@ type EditorState = {
   setViewport: (width: number, height: number) => void
   fitCanvas: () => void
   durationSeconds: () => number
+
+  updateSettings: (partial: Partial<TotalSettings>) => void
+  setScreenSizePreset: (preset: ScreenSizePreset) => void
+  setCustomScreenSize: (width: number, height: number) => void
+  setRecordSearch: (query: string) => void
+  renameRecord: (id: string, title: string) => void
+  deleteRecord: (id: string) => void
+  setRecordVisible: (id: string, visible: boolean) => void
+  setRecordAvatar: (id: string, avatarDataUrl: string | undefined) => void
+  addParsedRecord: (parsed: ParsedChatExport, options?: { id?: string; title?: string }) => string
+  openImportModal: () => void
+  closeImportModal: () => void
+  setImportProgress: (stage: string | null, ratio: number | null) => void
+  setImportError: (error: string | null) => void
 }
 
 const TARGET_FPS = 30
@@ -44,7 +72,7 @@ const TARGET_FPS = 30
 export const PLAYBACK_FPS = TARGET_FPS
 
 function loadProject(projectId: string): Project {
-  // Phase 3: no backend yet — fixture for any id; Phase 7 wires real projects.
+  // Phase 4 still uses the engine fixture locally; Phase 7 API persistence is separate.
   void projectId
   return createEngineFixtureProject()
 }
@@ -60,6 +88,18 @@ function computeFit(project: Project, viewport: { width: number; height: number 
   return { panX, panY, zoom }
 }
 
+function clampTSec(project: Project, tSec: number): number {
+  const total = computeProjectDuration(project).totalSeconds
+  return Math.min(Math.max(0, tSec), total)
+}
+
+function nextRecordId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `rec-${crypto.randomUUID()}`
+  }
+  return `rec-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
+}
+
 export function createEditorStore(projectId: string) {
   const project = loadProject(projectId)
   const initialViewport = { width: 1200, height: 700 }
@@ -73,8 +113,14 @@ export function createEditorStore(projectId: string) {
     ratingSelected: true,
     canvas: computeFit(project, initialViewport),
     viewport: initialViewport,
+    recordSearch: '',
+    importModal: { open: false, progressRatio: null, progressStage: null, error: null },
 
-    setProject: (next) => set({ project: next }),
+    setProject: (next) =>
+      set((s) => ({
+        project: next,
+        tSec: clampTSec(next, s.tSec),
+      })),
     setTSec: (tSec) => {
       const total = get().durationSeconds()
       set({ tSec: Math.min(Math.max(0, tSec), total) })
@@ -93,10 +139,135 @@ export function createEditorStore(projectId: string) {
     setCanvas: (partial) => set((s) => ({ canvas: { ...s.canvas, ...partial } })),
     setViewport: (width, height) => set({ viewport: { width, height } }),
     fitCanvas: () => {
-      const { project, viewport } = get()
-      set({ canvas: computeFit(project, viewport) })
+      const { project: p, viewport } = get()
+      set({ canvas: computeFit(p, viewport) })
     },
     durationSeconds: () => computeProjectDuration(get().project).totalSeconds,
+
+    updateSettings: (partial) => {
+      const { project: prev, tSec, viewport } = get()
+      const nextSettings: TotalSettings = { ...prev.settings, ...partial }
+      // Nested objects must replace, not shallow-merge incompletely.
+      if (partial.datesInterval) {
+        nextSettings.datesInterval = { ...prev.settings.datesInterval, ...partial.datesInterval }
+      }
+      if (partial.screenSize) {
+        nextSettings.screenSize = { ...prev.settings.screenSize, ...partial.screenSize }
+      }
+      const next: Project = { ...prev, settings: nextSettings }
+      const sizeChanged =
+        next.settings.screenSize.width !== prev.settings.screenSize.width ||
+        next.settings.screenSize.height !== prev.settings.screenSize.height
+      set({
+        project: next,
+        tSec: clampTSec(next, tSec),
+        ...(sizeChanged ? { canvas: computeFit(next, viewport) } : {}),
+      })
+    },
+
+    setScreenSizePreset: (preset) => {
+      if (preset === 'custom') {
+        get().updateSettings({
+          screenSize: { ...get().project.settings.screenSize, preset: 'custom' },
+        })
+        return
+      }
+      const dims = SCREEN_SIZE_PRESETS[preset]
+      get().updateSettings({
+        screenSize: { preset, width: dims.width, height: dims.height },
+      })
+    },
+
+    setCustomScreenSize: (width, height) => {
+      get().updateSettings({
+        screenSize: {
+          preset: 'custom',
+          width: Math.max(1, Math.floor(width)),
+          height: Math.max(1, Math.floor(height)),
+        },
+      })
+    },
+
+    setRecordSearch: (query) => set({ recordSearch: query }),
+
+    renameRecord: (id, title) => {
+      const trimmed = title.trim()
+      if (!trimmed) return
+      set((s) => ({
+        project: {
+          ...s.project,
+          records: s.project.records.map((r) => (r.id === id ? { ...r, title: trimmed } : r)),
+        },
+      }))
+    },
+
+    deleteRecord: (id) => {
+      set((s) => ({
+        project: {
+          ...s.project,
+          records: s.project.records.filter((r) => r.id !== id),
+        },
+        tSec: clampTSec(
+          { ...s.project, records: s.project.records.filter((r) => r.id !== id) },
+          s.tSec,
+        ),
+      }))
+    },
+
+    setRecordVisible: (id, visible) => {
+      set((s) => ({
+        project: {
+          ...s.project,
+          records: s.project.records.map((r) => (r.id === id ? { ...r, visible } : r)),
+        },
+      }))
+    },
+
+    setRecordAvatar: (id, avatarDataUrl) => {
+      set((s) => ({
+        project: {
+          ...s.project,
+          records: s.project.records.map((r) => {
+            if (r.id !== id) return r
+            const next = { ...r }
+            if (avatarDataUrl === undefined) {
+              delete next.avatarDataUrl
+            } else {
+              next.avatarDataUrl = avatarDataUrl
+            }
+            return next
+          }),
+        },
+      }))
+    },
+
+    addParsedRecord: (parsed, options = {}) => {
+      const id = options.id ?? nextRecordId()
+      const { project: prev, tSec } = get()
+      const next = addParsedExportToProject(prev, parsed, {
+        id,
+        ...(options.title !== undefined ? { title: options.title } : {}),
+      })
+      set({ project: next, tSec: clampTSec(next, tSec) })
+      return id
+    },
+
+    openImportModal: () =>
+      set({
+        importModal: { open: true, progressRatio: null, progressStage: null, error: null },
+      }),
+    closeImportModal: () =>
+      set({
+        importModal: { open: false, progressRatio: null, progressStage: null, error: null },
+      }),
+    setImportProgress: (stage, ratio) =>
+      set((s) => ({
+        importModal: { ...s.importModal, progressStage: stage, progressRatio: ratio, error: null },
+      })),
+    setImportError: (error) =>
+      set((s) => ({
+        importModal: { ...s.importModal, error, progressStage: null, progressRatio: null },
+      })),
   }))
 }
 
