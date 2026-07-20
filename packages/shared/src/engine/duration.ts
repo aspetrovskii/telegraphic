@@ -22,10 +22,12 @@ export function computeProjectDuration(project: Project): ProjectDuration {
   let animationSeconds: number
   if (project.settings.speedMode === 'totalLength') {
     animationSeconds = Math.max(0, project.settings.speedValue)
+  } else if (project.settings.speedValue <= 0) {
+    // Zero/negative days-per-second → no animated span (freeze on first/last via delays).
+    animationSeconds = 0
   } else {
     // daysPerSecond: each video second covers `speedValue` days
-    const daysPerSecond = Math.max(1e-9, project.settings.speedValue)
-    animationSeconds = daySpan / daysPerSecond
+    animationSeconds = daySpan / project.settings.speedValue
   }
 
   const startDelay = Math.max(0, project.settings.startDelay)

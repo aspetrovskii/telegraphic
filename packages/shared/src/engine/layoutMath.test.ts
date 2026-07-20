@@ -120,6 +120,17 @@ describe('duration + playback time', () => {
     expect(d.totalSeconds).toBe(5.5)
   })
 
+  it('daysPerSecond with non-positive speed yields zero animation span', () => {
+    const project = createEngineFixtureProject()
+    project.settings.speedMode = 'daysPerSecond'
+    project.settings.speedValue = 0
+    project.settings.startDelay = 1
+    project.settings.finishDelay = 2
+    const d = computeProjectDuration(project)
+    expect(d.animationSeconds).toBe(0)
+    expect(d.totalSeconds).toBe(3)
+  })
+
   it('freezes at start/end delays', () => {
     const project = createEngineFixtureProject()
     project.settings.speedValue = 10

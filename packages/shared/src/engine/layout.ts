@@ -14,8 +14,10 @@ export type BarLayout = {
   avatarDataUrl?: string
   /** Display value (lerped). */
   value: number
-  /** Target rank slot 0..topN-1 (may be >= topN while exiting). */
+  /** Interpolated Y slot 0..topN (may be fractional during swaps). */
   rank: number
+  /** 1-based label rank from current values (unique among visible bars). */
+  displayRank: number
   /** Pixel Y of the bar top (after enter/exit offset). */
   y: number
   /** Bar width in pixels. */
@@ -114,6 +116,7 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
 
   const exitRank = topN // slot just below the visible list
   const bars: BarLayout[] = []
+  const fadeOnly = card.entranceAnimation === 'fade'
 
   for (const id of ids) {
     const record = recordById.get(id)
@@ -121,18 +124,23 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
 
     const inA = rankA.has(id)
     const inB = rankB.has(id)
-    const rA = inA ? rankA.get(id)! : exitRank
-    const rB = inB ? rankB.get(id)! : exitRank
+    let slotA = inA ? rankA.get(id)! : exitRank
+    let slotB = inB ? rankB.get(id)! : exitRank
 
     const entering = !inA && inB
     const exiting = inA && !inB
+    // `fade`: appear/disappear in-place. `slide-from-edge`: slide from/to below.
+    if (fadeOnly) {
+      if (entering) slotA = slotB
+      if (exiting) slotB = slotA
+    }
     // Outside Top N: treat value as 0 so enter/exit grow/shrink without
     // exceeding the Top-N axis ceiling mid-transition.
     const vA = inA ? (valueA.get(id) ?? 0) : 0
     const vB = inB ? (valueB.get(id) ?? 0) : 0
 
     // PRD §3: linear interpolation of bar widths and Y positions (rank swaps).
-    const rank = lerp(rA, rB, t)
+    const rank = lerp(slotA, slotB, t)
     const value = lerp(vA, vB, t)
 
     let opacity = 1
@@ -150,12 +158,24 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
       ...(record.avatarDataUrl !== undefined ? { avatarDataUrl: record.avatarDataUrl } : {}),
       value,
       rank,
+      displayRank: 0,
       y,
       width: widthPx,
       opacity,
       entering,
       exiting,
     })
+  }
+
+  // Unique 1-based labels from current values (avoids duplicate numbers mid-swap).
+  const labeled = bars
+    .filter((b) => b.opacity > 0.001)
+    .sort((a, b) => {
+      if (b.value !== a.value) return b.value - a.value
+      return a.recordId < b.recordId ? -1 : a.recordId > b.recordId ? 1 : 0
+    })
+  for (let i = 0; i < labeled.length; i++) {
+    labeled[i]!.displayRank = i + 1
   }
 
   // Stable paint order: lower opacity first, then by rank (top bars on top when overlapping).

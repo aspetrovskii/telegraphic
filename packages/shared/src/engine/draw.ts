@@ -127,6 +127,24 @@ function drawBar(
   roundRectPath(ctx, x, y, Math.max(w, 0), h, card.barCornerRadius)
   ctx.fill()
 
+  if (card.barFillStyle === 'texture' && w > 0) {
+    ctx.save()
+    roundRectPath(ctx, x, y, Math.max(w, 0), h, card.barCornerRadius)
+    ctx.clip()
+    ctx.strokeStyle = shade(bar.color, 0.7)
+    ctx.globalAlpha = bar.opacity * 0.35
+    ctx.lineWidth = 1
+    const step = 6
+    for (let dx = -h; dx < w + h; dx += step) {
+      ctx.beginPath()
+      ctx.moveTo(x + dx, y)
+      ctx.lineTo(x + dx + h, y + h)
+      ctx.stroke()
+    }
+    ctx.restore()
+    ctx.globalAlpha = bar.opacity
+  }
+
   if (card.barOutline) {
     ctx.shadowBlur = 0
     ctx.strokeStyle = shade(bar.color, 0.7)
@@ -155,7 +173,7 @@ function drawBar(
     ctx.font = `600 12px ${card.typography.nameFontFamily}, Arial, sans-serif`
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-    const rankLabel = String(Math.round(bar.rank) + 1)
+    const rankLabel = String(bar.displayRank > 0 ? bar.displayRank : Math.floor(bar.rank) + 1)
     ctx.fillText(rankLabel, textLeft, y + h / 2)
     textLeft += ctx.measureText(rankLabel).width + 8
   }
