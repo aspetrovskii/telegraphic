@@ -24,14 +24,13 @@ function isResultJsonPath(path: string): boolean {
 }
 
 function findResultJsonPath(paths: string[]): string | null {
-  // Prefer root `result.json`, then nested `…/result.json`.
-  const root = paths.find((p) => normalizeZipPath(p) === 'result.json')
+  // Prefer root `result.json`, then nested `…/result.json` (basename match, case-insensitive).
+  const root = paths.find(
+    (p) => zipBasename(p).toLowerCase() === 'result.json' && !normalizeZipPath(p).includes('/'),
+  )
   if (root) return root
-  const nested = paths.find((p) => {
-    const n = normalizeZipPath(p)
-    return n.endsWith('/result.json') && zipBasename(n).toLowerCase() === 'result.json'
-  })
-  return nested ?? null
+  const nested = paths.find((p) => isResultJsonPath(p) && normalizeZipPath(p).includes('/'))
+  return nested ?? paths.find((p) => isResultJsonPath(p)) ?? null
 }
 
 /**
