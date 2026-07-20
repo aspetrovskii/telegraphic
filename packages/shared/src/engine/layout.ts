@@ -171,13 +171,12 @@ export function computeFrameLayout(project: Project, tSec: number): FrameLayout 
     })
   }
 
-  // Unique 1-based labels from current values (avoids duplicate numbers mid-swap).
-  // Use uncapped ordering intent: after capping, relative order among visible bars is preserved
-  // when all were below the ceiling; ties broken by id.
+  // Unique 1-based labels by visual slot (Y / interpolated rank), so badges
+  // always match top-to-bottom order even when capped values collide mid-swap.
   const labeled = bars
     .filter((b) => b.opacity > 0.001)
     .sort((a, b) => {
-      if (b.value !== a.value) return b.value - a.value
+      if (a.rank !== b.rank) return a.rank - b.rank
       return a.recordId < b.recordId ? -1 : a.recordId > b.recordId ? 1 : 0
     })
   for (let i = 0; i < labeled.length; i++) {
