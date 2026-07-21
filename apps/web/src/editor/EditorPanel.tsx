@@ -3,6 +3,7 @@ import type { LeftPanelId, RightPanelId } from './editorStore'
 import { TotalPanel } from './TotalPanel'
 import { DataPanel } from './DataPanel'
 import { DesignPanel } from './DesignPanel'
+import { SharePanel } from './SharePanel'
 
 const LEFT_TITLES: Record<LeftPanelId, string> = {
   total: 'Total',
@@ -10,9 +11,7 @@ const LEFT_TITLES: Record<LeftPanelId, string> = {
   share: 'Share',
 }
 
-/**
- * Left docked panels. Total & Data are Phase 4; Share stays a stub until Phase 8.
- */
+/** Left docked panels: Total, Data, Share. */
 export function LeftEditorPanel() {
   const leftPanel = useEditorStore((s) => s.leftPanel)
   if (!leftPanel) return null
@@ -28,9 +27,7 @@ export function LeftEditorPanel() {
       <div className="editor-panel__body editor-panel__body--scroll">
         {leftPanel === 'total' && <TotalPanel />}
         {leftPanel === 'data' && <DataPanel />}
-        {leftPanel === 'share' && (
-          <p className="editor-panel__placeholder">Controls coming in a later phase.</p>
-        )}
+        {leftPanel === 'share' && <SharePanel />}
       </div>
     </aside>
   )

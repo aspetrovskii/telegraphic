@@ -1,16 +1,24 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
+
+function safeNext(raw: string | null): string {
+  if (!raw) return '/'
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/'
+  return raw
+}
 
 export function SignInPage() {
   const { user, ready, signin, error, clearError } = useAuthStore()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const next = safeNext(params.get('next'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   if (ready && user) {
-    return <Navigate to="/" replace />
+    return <Navigate to={next} replace />
   }
 
   async function onSubmit(e: FormEvent) {
@@ -19,7 +27,7 @@ export function SignInPage() {
     setSubmitting(true)
     try {
       await signin(email, password)
-      navigate('/', { replace: true })
+      navigate(next, { replace: true })
     } catch {
       // error in store
     } finally {
@@ -71,7 +79,8 @@ export function SignInPage() {
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
         <p className="auth-switch">
-          Need an account? <Link to="/sign-up">Sign up</Link>
+          Need an account?{' '}
+          <Link to={`/sign-up?next=${encodeURIComponent(next)}`}>Sign up</Link>
         </p>
       </form>
     </main>
