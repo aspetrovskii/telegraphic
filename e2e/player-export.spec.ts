@@ -131,7 +131,8 @@ test.describe('player polish & MP4 export', () => {
       }
     })
 
-    await page.getByTestId('player-download-fallback').click()
+    // Hidden test hook is visually clipped; force-click to avoid hit-target interception.
+    await page.getByTestId('player-download-fallback').click({ force: true })
     await expect(page.getByTestId('export-fallback-notice')).toBeVisible()
 
     const result = await waitForExport(page, 90_000)

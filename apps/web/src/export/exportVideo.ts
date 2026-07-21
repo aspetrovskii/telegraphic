@@ -1,5 +1,6 @@
 import type { Project } from '@telegraphic/shared'
-import { detectExportCapabilities, isAvcConfigSupported, type ExportFormat } from './capabilities'
+import { detectExportCapabilities, type ExportFormat } from './capabilities'
+import { bitrateForSize, pickAvcCodec } from './codec'
 import { downloadBlob, exportFilename } from './download'
 import { exportMp4 } from './exportMp4'
 import { exportWebm } from './exportWebm'
@@ -51,9 +52,9 @@ export async function exportProjectVideo(
   let usingFallback = caps.willUseFallback
 
   if (!usingFallback) {
-    const bitrate = plan.width * plan.height >= 1920 * 1080 ? 8_000_000 : 2_500_000
-    const avcOk = await isAvcConfigSupported(plan.width, plan.height, bitrate)
-    if (!avcOk) {
+    const bitrate = bitrateForSize(plan.width, plan.height)
+    const codec = await pickAvcCodec(plan.width, plan.height, bitrate, plan.fps)
+    if (!codec) {
       usingFallback = true
       format = 'webm'
     }

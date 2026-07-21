@@ -1,4 +1,5 @@
 export { EXPORT_FPS, planExport, frameTimeSec, type ExportPlan } from './plan'
+export { pickAvcCodec, bitrateForSize } from './codec'
 export {
   detectExportCapabilities,
   pickWebmMimeType,

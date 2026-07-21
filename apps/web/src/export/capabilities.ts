@@ -47,19 +47,7 @@ export async function isAvcConfigSupported(
   height: number,
   bitrate: number,
 ): Promise<boolean> {
-  if (!hasVideoEncoder() || typeof VideoEncoder.isConfigSupported !== 'function') {
-    return false
-  }
-  try {
-    const result = await VideoEncoder.isConfigSupported({
-      codec: 'avc1.42001f',
-      width,
-      height,
-      bitrate,
-      framerate: 30,
-    })
-    return Boolean(result.supported)
-  } catch {
-    return false
-  }
+  const { pickAvcCodec } = await import('./codec')
+  const codec = await pickAvcCodec(width, height, bitrate)
+  return codec !== null
 }

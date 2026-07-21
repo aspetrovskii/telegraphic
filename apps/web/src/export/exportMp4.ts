@@ -1,5 +1,6 @@
 import { Muxer, ArrayBufferTarget } from 'mp4-muxer'
 import { render, type Project } from '@telegraphic/shared'
+import { bitrateForSize, pickAvcCodec } from './codec'
 import { frameTimeSec, type ExportPlan } from './plan'
 
 export type Mp4Progress = {
@@ -30,6 +31,11 @@ export async function exportMp4(
   if (!ctx) throw new Error('Could not create 2D canvas context for export')
 
   const bitrate = bitrateForSize(plan.width, plan.height)
+  const codec = await pickAvcCodec(plan.width, plan.height, bitrate, plan.fps)
+  if (!codec) {
+    throw new Error('No supported AVC codec for this resolution')
+  }
+
   const target = new ArrayBufferTarget()
   const muxer = new Muxer({
     target,
@@ -52,17 +58,13 @@ export async function exportMp4(
     },
   })
 
-  const config: VideoEncoderConfig = {
-    codec: 'avc1.42001f',
+  encoder.configure({
+    codec,
     width: plan.width,
     height: plan.height,
     bitrate,
     framerate: plan.fps,
-  }
-  // Prefer software path when available for CI/headless stability.
-  ;(config as VideoEncoderConfig & { hardwareAcceleration?: string }).hardwareAcceleration =
-    'prefer-software'
-  encoder.configure(config)
+  })
 
   const keyframeEvery = plan.fps * 2
 
@@ -108,13 +110,6 @@ export async function exportMp4(
 
   const buffer = target.buffer
   return new Blob([buffer], { type: 'video/mp4' })
-}
-
-function bitrateForSize(width: number, height: number): number {
-  const pixels = width * height
-  if (pixels >= 1920 * 1080) return 8_000_000
-  if (pixels >= 1280 * 720) return 5_000_000
-  return 2_500_000
 }
 
 function throwIfAborted(signal?: AbortSignal): void {
