@@ -124,4 +124,7 @@ export const api = {
     }),
   revokeShare: (shareId: string) =>
     request<{ ok: true }>(`/api/shares/${shareId}/revoke`, { method: 'POST' }),
+  /** Public view-only payload for `/p/:slug` (no auth). */
+  getPublicProject: (slug: string) =>
+    request<{ project: ProjectDetail }>(`/api/p/${encodeURIComponent(slug)}`),
 }

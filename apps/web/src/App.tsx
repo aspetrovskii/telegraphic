@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-
 import { EngineFixturePage } from './EngineFixturePage'
 import { EditorPage } from './editor/EditorPage'
 import { HomePage } from './pages/HomePage'
+import { PublicPage } from './pages/PublicPage'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
 import { useAuthStore } from './store/auth'
@@ -29,9 +30,8 @@ function Bootstrap({ children }: { children: ReactNode }) {
 }
 
 /**
- * Phase 3 editor shell. `/edit/fixture` is public for engine/e2e smoke;
- * other project ids require sign-in (Phase 7 auth). Real project payloads
- * still use the shared fixture race until Phase 4 wires Data import.
+ * Editor route. `/edit/fixture` is public for engine/e2e smoke;
+ * other project ids require sign-in.
  */
 function EditorRoute() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -56,6 +56,7 @@ export function App() {
           <Route path="/sign-in" element={<SignInPage />} />
           <Route path="/sign-up" element={<SignUpPage />} />
           <Route path="/edit/:projectId" element={<EditorRoute />} />
+          <Route path="/p/:slug" element={<PublicPage />} />
           <Route path="/engine-fixture/*" element={<EngineFixturePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

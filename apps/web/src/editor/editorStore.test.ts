@@ -9,6 +9,17 @@ describe('editorStore', () => {
     expect(state.project.id).toBe('fixture-engine-phase2')
     expect(state.durationSeconds()).toBeGreaterThan(0)
     expect(PLAYBACK_FPS).toBe(30)
+    expect(state.persistable).toBe(false)
+    expect(state.saveStatus).toBe('local')
+  })
+
+  it('marks persistable stores dirty when settings change', () => {
+    const fixture = createEditorStore('fixture').getState().project
+    const store = createEditorStore('proj-1', { ...fixture, id: 'proj-1' })
+    expect(store.getState().persistable).toBe(true)
+    expect(store.getState().saveStatus).toBe('clean')
+    store.getState().updateSettings({ topN: 3 })
+    expect(store.getState().saveStatus).toBe('dirty')
   })
 
   it('toggles left panels exclusively and closes on second click', () => {

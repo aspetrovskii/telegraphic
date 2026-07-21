@@ -37,8 +37,14 @@ export type ImportModalState = {
   error: string | null
 }
 
+export type SaveStatus = 'local' | 'clean' | 'dirty' | 'saving' | 'saved' | 'error'
+
 type EditorState = {
   project: Project
+  /** When false, Share/API persistence is unavailable (fixture / local-only). */
+  persistable: boolean
+  saveStatus: SaveStatus
+  saveError: string | null
   tSec: number
   playing: boolean
   leftPanel: LeftPanelId | null
@@ -54,6 +60,9 @@ type EditorState = {
   importModal: ImportModalState
 
   setProject: (project: Project) => void
+  setTitle: (title: string) => void
+  markDirty: () => void
+  setSaveStatus: (status: SaveStatus, error?: string | null) => void
   setTSec: (tSec: number) => void
   setPlaying: (playing: boolean) => void
   togglePlay: () => void
@@ -97,10 +106,19 @@ const TARGET_FPS = 30
 
 export const PLAYBACK_FPS = TARGET_FPS
 
-function loadProject(projectId: string): Project {
-  // Phase 4 still uses the engine fixture locally; Phase 7 API persistence is separate.
+function loadProject(projectId: string, initial?: Project): Project {
+  if (initial) return initial
+  // Local-only fixture race for engine / e2e smoke (`/edit/fixture`).
   void projectId
   return createEngineFixtureProject()
+}
+
+function withDirty<T extends object>(
+  persistable: boolean,
+  patch: T,
+): T | (T & { saveStatus: SaveStatus; saveError: null }) {
+  if (!persistable) return patch
+  return { ...patch, saveStatus: 'dirty' as const, saveError: null }
 }
 
 function computeFit(project: Project, viewport: { width: number; height: number }): CanvasView {
@@ -126,14 +144,18 @@ function nextRecordId(): string {
   return `rec-${Date.now()}-${Math.floor(Math.random() * 1e6)}`
 }
 
-export function createEditorStore(projectId: string) {
-  const project = loadProject(projectId)
+export function createEditorStore(projectId: string, initialProject?: Project) {
+  const project = loadProject(projectId, initialProject)
+  const persistable = projectId !== 'fixture'
   const initialViewport = { width: 1200, height: 700 }
 
   const firstVisible = project.records.find((r) => r.visible)?.id ?? project.records[0]?.id ?? null
 
   return create<EditorState>((set, get) => ({
     project,
+    persistable,
+    saveStatus: persistable ? 'clean' : 'local',
+    saveError: null,
     tSec: 0,
     playing: false,
     leftPanel: null,
@@ -155,6 +177,12 @@ export function createEditorStore(projectId: string) {
             ? s.selectedRecordId
             : (next.records.find((r) => r.visible)?.id ?? next.records[0]?.id ?? null),
       })),
+    setTitle: (title) => {
+      set((s) => withDirty(s.persistable, { project: { ...s.project, title } }))
+    },
+    markDirty: () =>
+      set((s) => (s.persistable ? { saveStatus: 'dirty' as const, saveError: null } : {})),
+    setSaveStatus: (status, error = null) => set({ saveStatus: status, saveError: error }),
     setTSec: (tSec) => {
       const total = get().durationSeconds()
       set({ tSec: Math.min(Math.max(0, tSec), total) })
@@ -186,7 +214,7 @@ export function createEditorStore(projectId: string) {
     durationSeconds: () => computeProjectDuration(get().project).totalSeconds,
 
     updateSettings: (partial) => {
-      const { project: prev, tSec, viewport } = get()
+      const { project: prev, tSec, viewport, persistable: canPersist } = get()
       const nextSettings: TotalSettings = { ...prev.settings, ...partial }
       // Nested objects must replace, not shallow-merge incompletely.
       if (partial.datesInterval) {
@@ -199,11 +227,13 @@ export function createEditorStore(projectId: string) {
       const sizeChanged =
         next.settings.screenSize.width !== prev.settings.screenSize.width ||
         next.settings.screenSize.height !== prev.settings.screenSize.height
-      set({
-        project: next,
-        tSec: clampTSec(next, tSec),
-        ...(sizeChanged ? { canvas: computeFit(next, viewport) } : {}),
-      })
+      set(
+        withDirty(canPersist, {
+          project: next,
+          tSec: clampTSec(next, tSec),
+          ...(sizeChanged ? { canvas: computeFit(next, viewport) } : {}),
+        }),
+      )
     },
 
     setScreenSizePreset: (preset) => {
@@ -263,7 +293,7 @@ export function createEditorStore(projectId: string) {
           palette: partial.card.palette ?? prev.theme.card.palette,
         }
       }
-      set({ project: { ...prev, theme: nextTheme } })
+      set(withDirty(get().persistable, { project: { ...prev, theme: nextTheme } }))
     },
 
     updateBackground: (partial) => {
@@ -313,94 +343,104 @@ export function createEditorStore(projectId: string) {
     renameRecord: (id, title) => {
       const trimmed = title.trim()
       if (!trimmed) return
-      set((s) => ({
-        project: {
-          ...s.project,
-          records: s.project.records.map((r) => (r.id === id ? { ...r, title: trimmed } : r)),
-        },
-      }))
+      set((s) =>
+        withDirty(s.persistable, {
+          project: {
+            ...s.project,
+            records: s.project.records.map((r) => (r.id === id ? { ...r, title: trimmed } : r)),
+          },
+        }),
+      )
     },
 
     deleteRecord: (id) => {
       set((s) => {
         const records = s.project.records.filter((r) => r.id !== id)
         const nextProject = { ...s.project, records }
-        return {
+        return withDirty(s.persistable, {
           project: nextProject,
           tSec: clampTSec(nextProject, s.tSec),
           selectedRecordId:
             s.selectedRecordId === id
               ? (records.find((r) => r.visible)?.id ?? records[0]?.id ?? null)
               : s.selectedRecordId,
-        }
+        })
       })
     },
 
     setRecordVisible: (id, visible) => {
-      set((s) => ({
-        project: {
-          ...s.project,
-          records: s.project.records.map((r) => (r.id === id ? { ...r, visible } : r)),
-        },
-      }))
+      set((s) =>
+        withDirty(s.persistable, {
+          project: {
+            ...s.project,
+            records: s.project.records.map((r) => (r.id === id ? { ...r, visible } : r)),
+          },
+        }),
+      )
     },
 
     setRecordAvatar: (id, avatarDataUrl) => {
-      set((s) => ({
-        project: {
-          ...s.project,
-          records: s.project.records.map((r) => {
-            if (r.id !== id) return r
-            const next = { ...r }
-            if (avatarDataUrl === undefined) {
-              delete next.avatarDataUrl
-            } else {
-              next.avatarDataUrl = avatarDataUrl
-            }
-            return next
-          }),
-        },
-      }))
+      set((s) =>
+        withDirty(s.persistable, {
+          project: {
+            ...s.project,
+            records: s.project.records.map((r) => {
+              if (r.id !== id) return r
+              const next = { ...r }
+              if (avatarDataUrl === undefined) {
+                delete next.avatarDataUrl
+              } else {
+                next.avatarDataUrl = avatarDataUrl
+              }
+              return next
+            }),
+          },
+        }),
+      )
     },
 
     setRecordColor: (id, color) => {
-      set((s) => ({
-        project: {
-          ...s.project,
-          records: s.project.records.map((r) => {
-            if (r.id !== id) return r
-            const next = { ...r }
-            if (color === undefined) delete next.color
-            else next.color = color
-            return next
-          }),
-        },
-      }))
+      set((s) =>
+        withDirty(s.persistable, {
+          project: {
+            ...s.project,
+            records: s.project.records.map((r) => {
+              if (r.id !== id) return r
+              const next = { ...r }
+              if (color === undefined) delete next.color
+              else next.color = color
+              return next
+            }),
+          },
+        }),
+      )
     },
 
     setRecordNameColor: (id, nameColor) => {
-      set((s) => ({
-        project: {
-          ...s.project,
-          records: s.project.records.map((r) => {
-            if (r.id !== id) return r
-            const next = { ...r }
-            if (nameColor === undefined) delete next.nameColor
-            else next.nameColor = nameColor
-            return next
-          }),
-        },
-      }))
+      set((s) =>
+        withDirty(s.persistable, {
+          project: {
+            ...s.project,
+            records: s.project.records.map((r) => {
+              if (r.id !== id) return r
+              const next = { ...r }
+              if (nameColor === undefined) delete next.nameColor
+              else next.nameColor = nameColor
+              return next
+            }),
+          },
+        }),
+      )
     },
 
     addParsedRecord: (parsed, options = {}) => {
       const id = options.id ?? nextRecordId()
-      const { project: prev, tSec } = get()
+      const { project: prev, tSec, persistable: canPersist } = get()
       const next = addParsedExportToProject(prev, parsed, {
         id,
         ...(options.title !== undefined ? { title: options.title } : {}),
       })
-      set({ project: next, tSec: clampTSec(next, tSec) })
+      set(withDirty(canPersist, { project: next, tSec: clampTSec(next, tSec) }))
       return id
     },
 
