@@ -131,9 +131,8 @@ test.describe('player polish & MP4 export', () => {
       }
     })
 
-    // Hidden test hook is visually clipped; force-click to avoid hit-target interception.
-    await page.getByTestId('player-download-fallback').click({ force: true })
-    await expect(page.getByTestId('export-fallback-notice')).toBeVisible()
+    // Hidden test hook is visually clipped; dispatch click via DOM.
+    await page.getByTestId('player-download-fallback').dispatchEvent('click')
 
     const result = await waitForExport(page, 90_000)
     expect(result.format).toBe('webm')
@@ -142,5 +141,6 @@ test.describe('player polish & MP4 export', () => {
     expect(result.byteLength).toBeGreaterThan(500)
     expect(result.fps).toBe(30)
     expect(result.durationSec).toBe(1)
+    await expect(page.getByTestId('export-fallback-notice')).toBeVisible()
   })
 })

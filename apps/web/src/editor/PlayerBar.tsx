@@ -33,9 +33,11 @@ export function PlayerBar() {
   const [progress, setProgress] = useState<ExportProgress | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  /** Sticky banner after a WebM fallback export (or when MP4 is unavailable). */
+  const [fallbackBanner, setFallbackBanner] = useState(false)
 
   const caps = detectExportCapabilities()
-  const showFallbackNotice = caps.willUseFallback
+  const showFallbackNotice = caps.willUseFallback || fallbackBanner
 
   useEffect(() => {
     if (!playing) return
@@ -97,6 +99,7 @@ export function PlayerBar() {
     setExportError(null)
     setPlaying(false)
     setExporting(true)
+    if (forceFallback || caps.willUseFallback) setFallbackBanner(true)
     setProgress({
       stage: 'preparing',
       ratio: 0,
@@ -108,11 +111,12 @@ export function PlayerBar() {
     abortRef.current = controller
 
     try {
-      await exportProjectVideo(project, {
+      const result = await exportProjectVideo(project, {
         forceFallback,
         signal: controller.signal,
         onProgress: setProgress,
       })
+      if (result.usingFallback) setFallbackBanner(true)
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         setExportError(null)
@@ -136,7 +140,6 @@ export function PlayerBar() {
   }
 
   const pct = progress ? Math.round(progress.ratio * 100) : 0
-  const usingFallback = progress?.usingFallback ?? showFallbackNotice
 
   return (
     <div className="player-bar" data-testid="player-bar">
@@ -230,7 +233,7 @@ export function PlayerBar() {
         onClick={() => void handleExport(true)}
       />
 
-      {(showFallbackNotice || usingFallback) && (
+      {showFallbackNotice && (
         <p className="player-bar__notice" data-testid="export-fallback-notice" role="status">
           MP4 export needs WebCodecs. This browser will download WebM instead.
         </p>

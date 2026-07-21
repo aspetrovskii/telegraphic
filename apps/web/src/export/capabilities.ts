@@ -41,13 +41,3 @@ export function detectExportCapabilities(forceFallback = false): ExportCapabilit
     willUseFallback: !canMp4,
   }
 }
-
-export async function isAvcConfigSupported(
-  width: number,
-  height: number,
-  bitrate: number,
-): Promise<boolean> {
-  const { pickAvcCodec } = await import('./codec')
-  const codec = await pickAvcCodec(width, height, bitrate)
-  return codec !== null
-}
