@@ -6,6 +6,7 @@ node_modules
 dist
 api/*.js
 api/package.json
+.vercel/output
 *.tsbuildinfo
 
 # Test / coverage

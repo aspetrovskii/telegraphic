@@ -88,7 +88,7 @@ Do not commit secrets. Configure production values in the Vercel project and Git
 4. Set `DATABASE_URL` (Turso) and session secret for production.
 5. Enable Git integration so every PR gets a preview deploy.
 
-`vercel.json` builds the web app and serves `GET /api/*` via the Hono serverless entry in `api/`.
+`pnpm build` emits a Vercel Build Output (`.vercel/output`) with the static web app plus a Node serverless catch-all for `/api/*` (Hono + Turso).
 
 ### Lighthouse / performance
 
