@@ -82,7 +82,9 @@ await writeFile(
       runtime: 'nodejs22.x',
       handler: 'index.js',
       launcherType: 'Nodejs',
-      shouldAddHelpers: true,
+      // Keep the raw Node request stream so Hono can read JSON bodies.
+      // With helpers enabled, Vercel consumes the body and c.req.json() hangs.
+      shouldAddHelpers: false,
     },
     null,
     2,
