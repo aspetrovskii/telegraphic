@@ -89,7 +89,7 @@ export function PublicPage() {
       setDupError(
         err instanceof ApiError && err.status === 413
           ? err.message ||
-            'Project is too large to duplicate. Ask the owner to reduce avatars or records.'
+              'Project is too large to duplicate. Ask the owner to reduce avatars or records.'
           : err instanceof Error
             ? err.message
             : 'Failed to duplicate',

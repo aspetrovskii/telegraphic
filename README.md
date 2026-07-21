@@ -19,15 +19,15 @@ Full walkthrough: [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
 
 ## Stack
 
-| Area     | Choice                                              |
-| -------- | --------------------------------------------------- |
-| Monorepo | pnpm workspaces                                     |
-| Web      | Vite + React + TypeScript (`apps/web`)              |
-| API      | Hono (`apps/api`) — SQLite local / Turso prod       |
-| Shared   | Types, parser, canvas engine (`packages/shared`)    |
-| State    | Zustand                                             |
-| Tests    | Vitest (unit), Playwright (e2e)                     |
-| Deploy   | Vercel                                              |
+| Area     | Choice                                           |
+| -------- | ------------------------------------------------ |
+| Monorepo | pnpm workspaces                                  |
+| Web      | Vite + React + TypeScript (`apps/web`)           |
+| API      | Hono (`apps/api`) — SQLite local / Turso prod    |
+| Shared   | Types, parser, canvas engine (`packages/shared`) |
+| State    | Zustand                                          |
+| Tests    | Vitest (unit), Playwright (e2e)                  |
+| Deploy   | Vercel                                           |
 
 ## Prerequisites
 

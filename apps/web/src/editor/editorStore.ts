@@ -113,12 +113,12 @@ function loadProject(projectId: string, initial?: Project): Project {
   return createEngineFixtureProject()
 }
 
-function withDirty<T extends Partial<EditorState>>(
+function withDirty<T extends object>(
   persistable: boolean,
   patch: T,
-): T & { saveStatus?: SaveStatus; saveError?: null } {
+): T | (T & { saveStatus: SaveStatus; saveError: null }) {
   if (!persistable) return patch
-  return { ...patch, saveStatus: 'dirty', saveError: null }
+  return { ...patch, saveStatus: 'dirty' as const, saveError: null }
 }
 
 function computeFit(project: Project, viewport: { width: number; height: number }): CanvasView {

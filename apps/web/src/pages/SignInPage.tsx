@@ -79,8 +79,7 @@ export function SignInPage() {
           {submitting ? 'Signing in…' : 'Sign in'}
         </button>
         <p className="auth-switch">
-          Need an account?{' '}
-          <Link to={`/sign-up?next=${encodeURIComponent(next)}`}>Sign up</Link>
+          Need an account? <Link to={`/sign-up?next=${encodeURIComponent(next)}`}>Sign up</Link>
         </p>
       </form>
     </main>
